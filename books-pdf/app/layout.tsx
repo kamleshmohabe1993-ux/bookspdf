@@ -16,16 +16,13 @@ const poppins = Poppins({
     preload: true,
 });
 
-type RootLayoutProps = {
-  children: ReactNode;
-};
 export const metadata = {
     title: 'BookMarket - Free & Premium PDF Books & eBooks Plateform',
     description: 'Download free & thousands of eBooks across programming, business, design, and more. Secure payment via PhonePe.',
     keywords: 'pdf books, ebooks, online books, digital books, programming books, business books',
 };
 
-export default function RootLayout({ children }: { children: RootLayoutProps }) {
+export default function RootLayout({ children }: { children:  React.ReactNode }) {
     return (
         <html lang="en">
             <body className={inter.className}>

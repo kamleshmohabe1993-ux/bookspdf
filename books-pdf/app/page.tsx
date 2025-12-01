@@ -41,7 +41,7 @@ export default function Home() {
     const closeMobileMenu = () => {
         setMobileMenuOpen(false);
       };
-    const handleNavigation = (path) => {
+    const handleNavigation = (path: string) => {
         router.push(path);
         closeMobileMenu();
       };
@@ -83,7 +83,7 @@ export default function Home() {
         }
     };
 
-    const handleSearch = (e) => {
+    const handleSearch = (e: { target: { value: SetStateAction<string>; }; }) => {
         setSearchQuery(e.target.value);
     };
 

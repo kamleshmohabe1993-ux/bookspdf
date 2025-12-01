@@ -49,7 +49,7 @@ export default function PaymentStatusPage() {
     }, [txnId]);
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center px-4">
+            <div className="min-h-screen bg-linear-to-br from-blue-50 to-purple-50 flex items-center justify-center px-4">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
                     {status === 'checking' && (
                         <div className="text-center">
