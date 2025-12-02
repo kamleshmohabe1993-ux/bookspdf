@@ -2,7 +2,7 @@ const { phonePeClient } = require('../config/phonepe');
 const crypto = require('crypto');
 const Purchase = require('../models/Purchase');
 const Book = require('../models/Book');
-const userId = require('../models/user')
+const userId = require('../models/User')
 // @route   POST /api/payments/initiate
 // @desc    Initiate PhonePe payment
 exports.initiatePayment = async (req, res) => {
