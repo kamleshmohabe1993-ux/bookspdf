@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
-const { verifyPhonePeConfig } = require('./config/phonepe');
+// const { verifyPhonePeConfig } = require('./config/phonepe');
 
 // Load env vars
 dotenv.config();
