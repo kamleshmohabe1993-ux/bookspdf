@@ -24,7 +24,7 @@ export default function AboutPage() {
                         At BookMarket, we believe that knowledge should be accessible to everyone. Our mission is to provide a platform where readers can easily discover, purchase, and download premium eBooks across various categories—from programming and technology to business and design.
                     </p>
                     <p className="text-gray-700 leading-relaxed">
-                        We're committed to offering high-quality digital content at affordable prices, making learning and professional development accessible to everyone, everywhere.
+                        We&apos;re committed to offering high-quality digital content at affordable prices, making learning and professional development accessible to everyone, everywhere.
                     </p>
                 </section>
 

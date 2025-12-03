@@ -76,18 +76,19 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         fullName: formData.fullName,
         mobileNumber: formData.mobileNumber,
         email: formData.email,
         password: formData.password
       });
-      
       // Store token
       localStorage.setItem('token', response.data.token);
        showToast.success('Account Deleted successfully!');
       // Redirect to dashboard
-      router.push('/');
+      if(response){
+        router.push('/');
+      }
     } catch (error) {
       setError(error.response?.data?.message);
       showToast.error('User Not Created!');

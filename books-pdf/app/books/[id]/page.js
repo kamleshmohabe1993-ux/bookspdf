@@ -101,7 +101,7 @@ export default function BookDetailsPage() {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(
-                `${'http://localhost:5000'}/api/ratings/user/${params.id}`,
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/ratings/user/${params.id}`,
                 {
                     headers: { Authorization: `Bearer ${token}` }
                 }

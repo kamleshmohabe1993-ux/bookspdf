@@ -98,7 +98,7 @@ export default function ContactPage() {
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <h3 className="font-semibold mb-1 text-sm text-gray-800 sm:text-base">Email Us</h3>
-                                        <p className="text-gray-600 text-sm sm:text-base break-all">support@bookspdf.com</p>
+                                        <p className="text-gray-600 text-sm sm:text-base break-all">contact@booksnpdf.com</p>
                                         <p className="text-xs sm:text-sm text-gray-500 mt-1">We&apos;ll respond within 24 hours</p>
                                     </div>
                                 </div>
