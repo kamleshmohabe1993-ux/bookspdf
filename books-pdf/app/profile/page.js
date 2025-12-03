@@ -28,7 +28,7 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
       }
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}auth/account`,
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/auth/account`,
         {
           data: { password, userId },
           headers: { Authorization: `Bearer ${token}` }
@@ -155,7 +155,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       setErrors({});
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}auth/change-password`,
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`,
           {
             currentPassword: passwords.currentPassword,
             newPassword: passwords.newPassword
@@ -312,7 +312,7 @@ const ProfilePage = () => {
         return;
       }
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}auth/me`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -341,7 +341,7 @@ const ProfilePage = () => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`,
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` }
