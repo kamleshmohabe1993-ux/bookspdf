@@ -131,7 +131,8 @@ export default function RefundPolicyPage() {
                         <li><strong>Request Review:</strong> 2-3 business days</li>
                         <li><strong>Approval Notification:</strong> Within 24 hours of review</li>
                         <li><strong>Refund Processing:</strong> 7-14 business days</li>
-                        <li><strong>Bank Credit:</strong> Additional 3-5 business days (depends on your bank)</li>
+                        {/* <li><strong>Bank Credit:</strong> Additional 3-5 business days (depends on your bank)</li> */}
+                        <li><strong>Bank Credit:</strong> Approved refund will be credited to the original payment method within 7-15 Business days.</li>
                     </ul>
                 </section>
 

@@ -288,9 +288,9 @@ export default function PrivacyPolicyPage() {
     ];
 
     const quickLinks = [
-        { label: 'Terms of Service', url: '/terms' },
-        { label: 'Cookie Policy', url: '/cookies' },
-        { label: 'Refund Policy', url: '/refund' },
+        { label: 'Terms of Service', url: '/terms-and-conditions' },
+        // { label: 'Cookie Policy', url: '/cookies' },
+        { label: 'Refund Policy', url: '/refund-policy' },
         { label: 'Contact Support', url: '/contact' }
     ];
 
