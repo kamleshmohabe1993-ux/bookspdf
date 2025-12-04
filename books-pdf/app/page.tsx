@@ -8,7 +8,6 @@ import { bookAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import BookCard from '@/components/BookCard';
 import LoadingSpinner, { PageLoader, ButtonLoader } from '@/components/LoadingSpinner';
-import Image from "next/image";
 import PageLayout from '@/components/PageLayout'
 import showToast from '@/lib/toast';
 type BookType = {
@@ -294,8 +293,8 @@ export default function Home() {
             <main className="container mx-auto px-4 py-8">
                 {/* Hero Section */}
                 <div className="bg-linear-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg mb-8">
-                    <h1 className="text-4xl font-bold mb-2">PDF Book Marketplace</h1>
-                    <p className="text-xl">Discover, Learn, and Grow with Premium eBooks</p>
+                    <h1 className="text-4xl font-bold mb-2">PDF eBooks Marketplace</h1>
+                    <p className="text-xl">Discover, Learn, and Grow with free and Premium eBooks</p>
                 </div>
 
                 {/* Search and Filter */}
@@ -436,7 +435,7 @@ export default function Home() {
                             <ul className="space-y-2">
                                 <li>
                                     <button 
-                                        onClick={() => handleNavigation('/privacy-policy')} 
+                                        onClick={() => handleNavigation('/policy')} 
                                         className="hover:text-blue-400 transition-colors"
                                     >
                                         Privacy Policy
