@@ -82,9 +82,9 @@ exports.createBook = async (req, res) => {
             description,
             thumbnailBase64,
             pdfDriveLink,
-            previewText,
             price,
             isPaid,
+            isPublished,
             category,
             tags
         } = req.body;
@@ -126,9 +126,9 @@ exports.createBook = async (req, res) => {
             thumbnail,
             pdfDriveLink,
             pdfDownloadLink,
-            previewText,
             price: isPaid ? price : 0,
             isPaid,
+            isPublished,
             category,
             tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
             createdBy: req.user._id

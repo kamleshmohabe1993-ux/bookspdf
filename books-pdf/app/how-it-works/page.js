@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Home, Search, ShoppingCart, CreditCard, Download, BookOpen, User, Mail, Lock, Star, Clock, CheckCircle, PlayCircle, FileText, Smartphone, Shield, RefreshCw } from 'lucide-react';
-
+import Footer from '@/components/Footer'
 export default function HowItWorksPage() {
     const [activeProcess, setActiveProcess] = useState('browse');
 
@@ -405,6 +405,7 @@ export default function HowItWorksPage() {
                     </div>
                 </div>
             </div>
+            <Footer></Footer>
         </div>
     );
 }

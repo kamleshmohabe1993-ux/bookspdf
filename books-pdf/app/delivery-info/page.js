@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Home, Download, Mail, Clock, CheckCircle, AlertCircle, HelpCircle, Zap, Shield, RefreshCw, FileText, Smartphone, Laptop } from 'lucide-react';
-
+import Footer  from '@/components/Footer'
 export default function DeliveryInfoPage() {
     const [activeTab, setActiveTab] = useState('instant');
 
@@ -76,8 +76,8 @@ export default function DeliveryInfoPage() {
                             <span className="hidden sm:inline">Back to Home</span>
                             <Home size={20} className="sm:hidden" />
                         </button>
-                        <h1 className="text-lg sm:text-2xl font-bold items-center text-gray-900">Delivery Information</h1>
-                        {/* <div className="w-20"></div> */}
+                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Delivery Info.</h1>
+                        <div className="w-20"></div>
                     </div>
                 </div>
             </div>
@@ -104,21 +104,21 @@ export default function DeliveryInfoPage() {
                         <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Zap className="text-green-600" size={32} />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">Instant Access</h3>
+                        <h3 className="font-bold text-lg text-gray-700 mb-2">Instant Access</h3>
                         <p className="text-gray-600 text-sm">Download immediately after payment</p>
                     </div>
                     <div className="bg-white rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition-transform">
                         <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Shield className="text-blue-600" size={32} />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">100% Secure</h3>
+                        <h3 className="font-bold text-lg text-gray-700 mb-2">100% Secure</h3>
                         <p className="text-gray-600 text-sm">Protected payment & download links</p>
                     </div>
                     <div className="bg-white rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition-transform sm:col-span-2 lg:col-span-1">
                         <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             <RefreshCw className="text-purple-600" size={32} />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">Unlimited Downloads</h3>
+                        <h3 className="font-bold text-lg text-gray-700 mb-2">Unlimited Downloads</h3>
                         <p className="text-gray-600 text-sm">Re-download anytime from dashboard</p>
                     </div>
                 </div>
@@ -141,9 +141,9 @@ export default function DeliveryInfoPage() {
                                     <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-3 rounded-lg">
                                         {step.icon}
                                     </div>
-                                    <span className="text-3xl font-bold text-gray-200">{index + 1}</span>
+                                    <span className="text-3xl font-bold text-gray-500">{index + 1}</span>
                                 </div>
-                                <h3 className="font-bold text-lg mb-2">{step.title}</h3>
+                                <h3 className="font-bold text-lg text-gray-700 mb-2">{step.title}</h3>
                                 <p className="text-gray-600 text-sm mb-3">{step.description}</p>
                                 <div className="flex items-center gap-2 text-blue-600 text-sm font-semibold">
                                     <Clock size={16} />
@@ -174,7 +174,7 @@ export default function DeliveryInfoPage() {
                             <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                                 <Mail className="text-blue-600" size={32} />
                             </div>
-                            <h3 className="text-xl sm:text-2xl font-bold mb-4">Email Delivery</h3>
+                            <h3 className="text-xl sm:text-2xl text-gray-700 font-bold mb-4">Email Delivery</h3>
                             <p className="text-gray-600 mb-6">
                                 Receive instant download links directly to your registered email address
                             </p>
@@ -206,7 +206,7 @@ export default function DeliveryInfoPage() {
                                 </div>
                                 <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold">RECOMMENDED</span>
                             </div>
-                            <h3 className="text-xl sm:text-2xl font-bold mb-4">Account Dashboard</h3>
+                            <h3 className="text-xl sm:text-2xl font-bold text-gray-700 mb-4">Account Dashboard</h3>
                             <p className="text-gray-600 mb-6">
                                 Access all your purchased books anytime from your personal library
                             </p>
@@ -343,6 +343,9 @@ export default function DeliveryInfoPage() {
                         </button>
                     </div>
                 </div>
+            </div>
+            <div>
+                <Footer></Footer>
             </div>
         </div>
     );

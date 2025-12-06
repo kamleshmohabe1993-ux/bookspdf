@@ -9,7 +9,7 @@ import LoadingSpinner, { PageLoader, ButtonLoader } from '@/components/LoadingSp
 import showToast from '@/lib/toast';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-
+import Footer from '@/components/Footer';
 // Delete Account Component
 const DeleteAccountModal = ({ isOpen, onClose }) => {
   const [confirmText, setConfirmText] = useState('');
@@ -694,7 +694,7 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-
+      <Footer></Footer>
       {/* Modals */}
       <DeleteAccountModal
         isOpen={showDeleteModal}

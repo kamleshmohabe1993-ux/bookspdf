@@ -25,9 +25,6 @@ const bookSchema = new mongoose.Schema({
     pdfDownloadLink: {
         type: String
     },
-    previewText: {
-        type: String
-    },
     price: {
         type: Number,
         default: 0,
@@ -37,9 +34,13 @@ const bookSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isPublished: {
+        type: Boolean,
+        default: true
+    },
     category: {
         type: String,
-        enum: ['Programming', 'Business', 'Design', 'Marketing', 'Other'],
+        enum: ['Education', 'Business', 'Design', 'Marketing', 'Religious', 'Spiritual', 'Relationship', 'Other',],
         default: 'Other'
     },
     downloadCount: {

@@ -19,7 +19,7 @@ export default function TermsAndConditionsPage() {
                         <strong>Last Updated:</strong> {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
                     </p>
                     <p className="text-sm text-gray-600 mt-2 m-0">
-                        <strong>Effective Date:</strong> January 1, 2024
+                        <strong>Effective Date:</strong> January 1, 2025
                     </p>
                 </div>
 
@@ -342,7 +342,7 @@ export default function TermsAndConditionsPage() {
                 
                 <h3 className="text-xl font-semibold mt-6 mb-3">14.1 Informal Resolution</h3>
                 <p className="text-gray-700">
-                    Before filing a claim, please contact us at <a href="mailto:support@bookmarket.com" className="text-blue-600 hover:underline font-semibold">support@bookmarket.com</a> to resolve the issue informally.
+                    Before filing a claim, please contact us at <a href="mailto:contact@booksnpdf.com" className="text-blue-600 hover:underline font-semibold">support@bookmarket.com</a> to resolve the issue informally.
                 </p>
 
                 <h3 className="text-xl font-semibold mt-6 mb-3">14.2 Arbitration</h3>
@@ -383,7 +383,7 @@ export default function TermsAndConditionsPage() {
                 </p>
 
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                    <h3 className="font-bold text-lg mb-3">BookMarket Legal Team</h3>
+                    <h3 className="font-bold text-lg mb-3">BooksnPDF Legal Team</h3>
                     <div className="space-y-2 text-gray-700">
                         <p><strong>Email:</strong> <a href="mailto:legal@bookmarket.com" className="text-blue-600 hover:underline">legal@bookmarket.com</a></p>
                         <p><strong>Phone:</strong> +91 98765 43210</p>

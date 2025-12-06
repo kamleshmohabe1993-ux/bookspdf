@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Upload, Trash2, Edit } from 'lucide-react';
+import { Upload, Trash2, Edit, Eye, EyeOff, Menu, X } from 'lucide-react';
 import { bookAPI } from '@/lib/api';
 import { adminAPI } from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 import showToast from '@/lib/toast';
+
 export default function AdminPanel() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [books, setBooks] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         author: '',
@@ -23,7 +25,8 @@ export default function AdminPanel() {
         price: '0',
         isPaid: false,
         category: 'Other',
-        tags: ''
+        tags: '',
+        isPublished: true
     });
     const [editingId, setEditingId] = useState(null);
 
@@ -101,10 +104,12 @@ export default function AdminPanel() {
                 price: '0',
                 isPaid: false,
                 category: 'Other',
-                tags: ''
+                tags: '',
+                isPublished: true
             });
 
             loadBooks();
+            setShowMobileMenu(false);
         } catch (error) {
             alert('Error: ' + (error.response?.data?.error || error.message));
         } finally {
@@ -123,9 +128,11 @@ export default function AdminPanel() {
             price: book.price.toString(),
             isPaid: book.isPaid,
             category: book.category,
-            tags: book.tags?.join(', ') || ''
+            tags: book.tags?.join(', ') || '',
+            isPublished: book.isPublished !== undefined ? book.isPublished : true
         });
         setEditingId(book._id);
+        setShowMobileMenu(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -144,6 +151,28 @@ export default function AdminPanel() {
         }
     };
 
+    const togglePublish = async (bookId, currentStatus) => {
+        try {
+            const newStatus = !currentStatus;
+            await adminAPI.updateBook(bookId, { isPublished: newStatus });
+            
+            showToast.success(
+                newStatus 
+                    ? 'Book published successfully!' 
+                    : 'Book unpublished successfully!'
+            );
+            
+            // Update local state
+            setBooks(books.map(book => 
+                book._id === bookId 
+                    ? { ...book, isPublished: newStatus }
+                    : book
+            ));
+        } catch (error) {
+            showToast.error('Error updating book status: ' + error.message);
+        }
+    };
+
     const cancelEdit = () => {
         setEditingId(null);
         setFormData({
@@ -156,8 +185,10 @@ export default function AdminPanel() {
             price: '0',
             isPaid: false,
             category: 'Other',
-            tags: ''
+            tags: '',
+            isPublished: true
         });
+        setShowMobileMenu(false);
     };
 
     if (authLoading || !user?.isAdmin) {
@@ -168,16 +199,42 @@ export default function AdminPanel() {
         );
     }
 
+    const publishedCount = books.filter(book => book.isPublished !== false).length;
+    const unpublishedCount = books.length - publishedCount;
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <header className="bg-white shadow-md">
-                <div className="container mx-auto px-4 py-4">
+            <header className="bg-white shadow-md sticky top-0 z-40">
+                <div className="container mx-auto px-4 py-3 sm:py-4">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold text-cyan-800">Admin Panel</h1>
+                        <div className="flex-1">
+                            <h1 className="text-xl sm:text-2xl font-bold text-cyan-800">Admin Panel</h1>
+                            <div className="flex flex-wrap gap-2 sm:gap-4 mt-1 sm:mt-2 text-xs sm:text-sm">
+                                <span className="text-green-600 font-semibold">
+                                    Published: {publishedCount}
+                                </span>
+                                <span className="text-gray-600 font-semibold">
+                                    Unpublished: {unpublishedCount}
+                                </span>
+                                <span className="text-purple-600 font-semibold">
+                                    Total: {books.length}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        {/* Mobile Menu Toggle */}
+                        <button
+                            onClick={() => setShowMobileMenu(!showMobileMenu)}
+                            className="md:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                        >
+                            {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
+                        </button>
+                        
+                        {/* Desktop Back Button */}
                         <button
                             onClick={() => router.push('/')}
-                            className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300"
+                            className="hidden md:block px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors"
                         >
                             Back to Home
                         </button>
@@ -185,17 +242,27 @@ export default function AdminPanel() {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-8">
-                <div className="grid md:grid-cols-2 gap-6">
+            <main className="container mx-auto px-4 py-4 sm:py-8">
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                     {/* Upload Form */}
-                    <div className="bg-white text-gray-800 p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">
-                            {editingId ? 'Edit Book' : 'Upload New Book'}
-                        </h2>
+                    <div className={`bg-white text-gray-800 p-4 sm:p-6 rounded-lg shadow-lg ${
+                        showMobileMenu ? 'block' : 'hidden md:block'
+                    }`}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl sm:text-2xl font-bold">
+                                {editingId ? 'Edit Book' : 'Upload New Book'}
+                            </h2>
+                            <button
+                                onClick={() => router.push('/')}
+                                className="md:hidden px-3 py-1 text-sm bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300"
+                            >
+                                Home
+                            </button>
+                        </div>
                         
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                             <div>
-                                <label className="block text-md text-gray-800 font-semibold mb-2">
+                                <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                     Book Title *
                                 </label>
                                 <input
@@ -204,13 +271,13 @@ export default function AdminPanel() {
                                     value={formData.title}
                                     onChange={handleInputChange}
                                     required
-                                    className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                     placeholder="Enter book title"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-md text-gray-800 font-semibold mb-2">
+                                <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                     Author
                                 </label>
                                 <input
@@ -218,13 +285,13 @@ export default function AdminPanel() {
                                     name="author"
                                     value={formData.author}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                     placeholder="Enter author name"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-md text-gray-800 font-semibold mb-2">
+                                <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                     Description *
                                 </label>
                                 <textarea
@@ -233,7 +300,7 @@ export default function AdminPanel() {
                                     onChange={handleInputChange}
                                     required
                                     rows="3"
-                                    className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                     placeholder="Enter book description"
                                 ></textarea>
                             </div>
@@ -244,7 +311,7 @@ export default function AdminPanel() {
                             />
 
                             <div>
-                                <label className="block text-md text-gray-800 font-semibold mb-2">
+                                <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                     Google Drive PDF Link *
                                 </label>
                                 <input
@@ -253,7 +320,7 @@ export default function AdminPanel() {
                                     value={formData.pdfDriveLink}
                                     onChange={handleInputChange}
                                     required
-                                    className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                     placeholder="https://drive.google.com/file/d/..."
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
@@ -262,7 +329,7 @@ export default function AdminPanel() {
                             </div>
 
                             <div>
-                                <label className="block text-md text-gray-800 font-semibold mb-2">
+                                <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                     Preview Text
                                 </label>
                                 <textarea
@@ -270,31 +337,34 @@ export default function AdminPanel() {
                                     value={formData.previewText}
                                     onChange={handleInputChange}
                                     rows="2"
-                                    className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                     placeholder="Enter preview text"
                                 ></textarea>
                             </div>
 
                             <div>
-                                <label className="block text-md text-gray-800 font-semibold mb-2">
+                                <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                     Category
                                 </label>
                                 <select
                                     name="category"
                                     value={formData.category}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                 >
-                                    <option value="Programming">Programming</option>
+                                    <option value="Education">Education</option>
                                     <option value="Business">Business</option>
                                     <option value="Design">Design</option>
                                     <option value="Marketing">Marketing</option>
+                                    <option value="Religious">Religious</option>
+                                    <option value="Spiritual">Spiritual</option>
+                                    <option value="Relationship">Relationship</option>
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label className="block text-md text-gray-800 font-semibold mb-2">
+                                <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                     Tags (comma-separated)
                                 </label>
                                 <input
@@ -302,7 +372,7 @@ export default function AdminPanel() {
                                     name="tags"
                                     value={formData.tags}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                     placeholder="javascript, react, frontend"
                                 />
                             </div>
@@ -315,14 +385,14 @@ export default function AdminPanel() {
                                     onChange={handleInputChange}
                                     className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
                                 />
-                                <label className="text-sm text-gray-800 font-semibold">
+                                <label className="text-xs sm:text-sm text-gray-800 font-semibold">
                                     This is a paid book
                                 </label>
                             </div>
 
                             {formData.isPaid && (
                                 <div>
-                                    <label className="block text-md text-gray-800 font-semibold mb-2">
+                                    <label className="block text-sm sm:text-md text-gray-800 font-semibold mb-2">
                                         Price (₹)
                                     </label>
                                     <input
@@ -332,23 +402,36 @@ export default function AdminPanel() {
                                         onChange={handleInputChange}
                                         min="0"
                                         step="0.01"
-                                        className="w-full px-4 py-2 border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border text-gray-600 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                         placeholder="0"
                                     />
                                 </div>
                             )}
 
-                            <div className="flex gap-3">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    name="isPublished"
+                                    checked={formData.isPublished}
+                                    onChange={handleInputChange}
+                                    className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                                />
+                                <label className="text-xs sm:text-sm text-gray-800 font-semibold">
+                                    Publish book immediately
+                                </label>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className={`flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 ${
+                                    className={`flex-1 py-2.5 sm:py-3 rounded-lg font-semibold flex items-center justify-center gap-2 text-sm sm:text-base ${
                                         loading
                                             ? 'bg-gray-400 cursor-not-allowed'
                                             : 'bg-purple-600 hover:bg-purple-700 text-white'
                                     }`}
                                 >
-                                    <Upload size={20} />
+                                    <Upload size={18} />
                                     {editingId ? 'Update Book' : 'Upload Book'}
                                 </button>
 
@@ -356,7 +439,7 @@ export default function AdminPanel() {
                                     <button
                                         type="button"
                                         onClick={cancelEdit}
-                                        className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                                        className="px-6 py-2.5 sm:py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm sm:text-base font-semibold"
                                     >
                                         Cancel
                                     </button>
@@ -366,58 +449,95 @@ export default function AdminPanel() {
                     </div>
 
                     {/* Books List */}
-                    <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl text-gray-600 font-bold mb-4">
-                            Existing Books ({books.length})
-                        </h2>
+                    <div className={`bg-white p-4 sm:p-6 rounded-lg shadow-lg ${
+                        showMobileMenu ? 'hidden md:block' : 'block'
+                    }`}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl sm:text-2xl text-gray-600 font-bold">
+                                Books ({books.length})
+                            </h2>
+                            <button
+                                onClick={() => setShowMobileMenu(true)}
+                                className="md:hidden px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 flex items-center gap-1"
+                            >
+                                <Upload size={16} />
+                                Add Book
+                            </button>
+                        </div>
                         
-                        <div className="space-y-3 text-gray-600 max-h-[800px] overflow-y-auto">
-                            {books.map((book) => (
-                                <div
-                                    key={book._id}
-                                    className="border text-gray-600 border-gray-200 p-3 rounded-lg flex items-center justify-between hover:bg-gray-50"
-                                >
-                                    <div className="flex items-center gap-3 flex-1">
-                                        <img
-                                            src={
-                                                book.thumbnail?.data
-                                                    ? `data:${book.thumbnail.contentType};base64,${book.thumbnail.data}`
-                                                    : '/placeholder-book.jpg'
-                                            }
-                                            alt={book.title}
-                                            className="w-12 h-16 object-cover rounded"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold truncate">
-                                                {book.title}
-                                            </h3>
-                                            <p className="text-sm text-gray-600">
-                                                {book.isPaid ? `₹${book.price}` : 'FREE'}
-                                            </p>
-                                            <p className="text-xs text-gray-500">
-                                                Downloads: {book.downloadCount || 0}
-                                            </p>
+                        <div className="space-y-3 text-gray-600 max-h-[calc(100vh-200px)] sm:max-h-[800px] overflow-y-auto">
+                            {books.map((book) => {
+                                const isPublished = book.isPublished !== false;
+                                
+                                return (
+                                    <div
+                                        key={book._id}
+                                        className={`border p-3 rounded-lg flex flex-col sm:flex-row items-start sm:items-center gap-3 transition-all ${
+                                            isPublished 
+                                                ? 'border-gray-200 bg-white hover:bg-gray-50' 
+                                                : 'border-gray-300 bg-gray-50 opacity-75'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-3 flex-1 w-full sm:w-auto">
+                                            <img
+                                                src={
+                                                    book.thumbnail?.data
+                                                        ? `data:${book.thumbnail.contentType};base64,${book.thumbnail.data}`
+                                                        : '/placeholder-book.jpg'
+                                                }
+                                                alt={book.title}
+                                                className="w-12 h-16 sm:w-12 sm:h-16 object-cover rounded flex-shrink-0"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start gap-2 flex-wrap">
+                                                    <h3 className="font-semibold text-sm sm:text-base break-words">
+                                                        {book.title}
+                                                    </h3>
+                                                    {!isPublished && (
+                                                        <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded whitespace-nowrap">
+                                                            Unpublished
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+                                                    {book.isPaid ? `₹${book.price}` : 'FREE'}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    Downloads: {book.downloadCount || 0}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex gap-2 w-full sm:w-auto justify-end">
+                                            <button
+                                                onClick={() => togglePublish(book._id, isPublished)}
+                                                className={`p-2 rounded transition-colors ${
+                                                    isPublished
+                                                        ? 'text-orange-600 hover:bg-orange-50'
+                                                        : 'text-green-600 hover:bg-green-50'
+                                                }`}
+                                                title={isPublished ? 'Unpublish' : 'Publish'}
+                                            >
+                                                {isPublished ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                            <button
+                                                onClick={() => handleEdit(book)}
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                                title="Edit"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(book._id)}
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
                                         </div>
                                     </div>
-                                    
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleEdit(book)}
-                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                                            title="Edit"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(book._id)}
-                                            className="p-2 text-red-600 hover:bg-red-50 rounded"
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

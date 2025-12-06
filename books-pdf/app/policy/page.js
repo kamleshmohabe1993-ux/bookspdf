@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Home, Shield, Lock, Eye, Database, UserCheck, Mail, Cookie, AlertCircle, CheckCircle, FileText, Globe, Users } from 'lucide-react';
-
+import Footer from '@/components/Footer';
 export default function PrivacyPolicyPage() {
     const [activeSection, setActiveSection] = useState('introduction');
 
@@ -278,7 +278,7 @@ export default function PrivacyPolicyPage() {
             content: {
                 text: 'If you have questions or concerns about this Privacy Policy or our data practices, please contact us:',
                 contactInfo: [
-                    { label: 'Email', value: 'privacy@bookspdf.com', icon: <Mail size={20} /> },
+                    { label: 'Email', value: 'contact@booksnpdf.com', icon: <Mail size={20} /> },
                     { label: 'Phone', value: '+91 98765 43210', icon: '📞' },
                     { label: 'Address', value: '123 Book Street, Mumbai, Maharashtra 400069, India', icon: '📍' },
                     { label: 'Response Time', value: 'We aim to respond within 48 hours', icon: '⏱️' }
@@ -578,6 +578,7 @@ export default function PrivacyPolicyPage() {
                     </button>
                 </div>
             </div>
+            <Footer></Footer>
         </div>
     );
 }
