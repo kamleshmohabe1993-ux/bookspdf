@@ -1,0 +1,50 @@
+# ============================================
+# robots.txt
+# Place this file in: public/robots.txt
+# ============================================
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow specific paths
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /orders/
+Disallow: /wishlist/
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /about
+Allow: /contact
+Allow: /how-it-works
+Allow: /delivery-info
+Allow: /privacy-policy
+Allow: /terms
+Allow: /faqs
+Allow: /books
+Allow: /category/
+
+# Sitemap location
+Sitemap: https://www.booksnpdf.com/sitemap.xml
+Sitemap: https://www.booksnpdf.com/sitemap-books.xml
+Sitemap: https://www.booksnpdf.com/sitemap-categories.xml
+
+# Crawl-delay (optional - adjust as needed)
+Crawl-delay: 1
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10

@@ -15,11 +15,11 @@ const Footer = () => {
         ],
         support: [
             { label: 'FAQs', path: '/faqs' },
-            { label: 'Help Center', path: '/support' },
-            { label: 'Delivery Info', path: '/shipping-delivery' },
+            { label: 'Help Center', path: '/contact' },
+            { label: 'Delivery Info', path: '/delivery-info' },
         ],
         legal: [
-            { label: 'Privacy Policy', path: '/privacy-policy' },
+            { label: 'Privacy Policy', path: '/policy' },
             { label: 'Terms & Conditions', path: '/terms-and-conditions' },
             { label: 'Refund Policy', path: '/refund-policy' },
         ]
@@ -42,7 +42,7 @@ const Footer = () => {
                     <div>
                         <div className="flex items-center gap-2 mb-4">
                             <Book className="text-blue-400" size={32} />
-                            <span className="text-2xl font-bold">BookMarket</span>
+                            <span className="text-2xl font-bold">BooksnPDF</span>
                         </div>
                         <p className="text-gray-400 mb-4">
                             Your trusted destination for premium eBooks. Discover, learn, and grow with thousands of quality digital books.
@@ -103,8 +103,8 @@ const Footer = () => {
                         <ul className="space-y-3 text-gray-400">
                             <li className="flex items-start gap-2">
                                 <Mail className="flex-shrink-0 mt-1" size={18} />
-                                <a href="mailto:support@bookmarket.com" className="hover:text-white transition-colors">
-                                    support@bookmarket.com
+                                <a href="mailto:contact@booksnpdf.com" className="hover:text-white transition-colors">
+                                    contact@booksnpdf.com
                                 </a>
                             </li>
                             <li className="flex items-start gap-2">
@@ -127,7 +127,7 @@ const Footer = () => {
                 <div className="container mx-auto px-4 py-6">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <p className="text-gray-400 text-sm text-center md:text-left">
-                            © {currentYear} BookMarket. All rights reserved.
+                            © {currentYear} BooksnPDF. All rights reserved.
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
                             {footerLinks.legal.map((link, index) => (
@@ -145,7 +145,7 @@ const Footer = () => {
                             ))}
                         </div>
                         <p className="text-gray-400 text-sm">
-                            Made with ❤️ in India
+                            Have a great reading ❤️
                         </p>
                     </div>
                 </div>

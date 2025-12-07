@@ -18,7 +18,7 @@ const connectDB = async () => {
 };
 
 const createAdminUser = async () => {
-    const User = require('../models/User');
+    const User = require('../models/user.js');
     
     const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL });
     

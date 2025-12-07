@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
     baseURL: API_URL,
@@ -27,7 +27,10 @@ export const authAPI = {
     getProfile: () => api.get('/auth/me'),
     updateProfile: (data) => api.put('/auth/profile', data),
     deleteProfile: (data) => api.delete('/auth/account', data),
-    changePassword: (data) => api.put('/auth/change-password', data)
+    changePassword: (data) => api.put('/auth/change-password', data),
+    forgotPassword: (data) => api.post('/auth/forgot-password', data),
+    verifyResetPassword: (data) => api.post('/auth/verify-reset-otp', data),
+    resetPassword: (data) => api.post('/auth/reset-password', data)
 };
 
 // Books API

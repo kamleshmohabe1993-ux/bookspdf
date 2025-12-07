@@ -84,7 +84,7 @@ export default function RegisterPage() {
       });
       // Store token
       localStorage.setItem('token', response.data.token);
-       showToast.success('Account Deleted successfully!');
+      showToast.success('User Creted Successfully!');
       // Redirect to dashboard
       if(response){
         router.push('/');

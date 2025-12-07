@@ -22,7 +22,7 @@ const Header = () => {
 
     const navItems = [
         { label: 'Home', icon: Home, path: '/' },
-        { label: 'Categories', path: '/#categories' },
+        // { label: 'Categories', path: '/#categories' },
         { label: 'About', path: '/about' },
         { label: 'Contact', path: '/contact' },
     ];
@@ -42,7 +42,7 @@ const Header = () => {
                         </div>
                         <div>
                             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                BookMarket
+                                BooknPDF
                             </span>
                             <p className="text-xs text-gray-500 hidden sm:block">Premium eBooks Store</p>
                         </div>
