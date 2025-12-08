@@ -186,7 +186,7 @@ const BookCard = ({ book }) => {
                         onClick={() => router.push(`/books/${book._id}`)}
                         className="bg-linear-to-r from-blue-600 to-purple-600 text-white px-2 py-1 rounded text-xs font-semibold hover:scale-105 transition-all"
                     >
-                        Save
+                        View
                     </button>
                 </div>
             </div>

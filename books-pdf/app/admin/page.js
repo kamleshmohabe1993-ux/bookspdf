@@ -359,6 +359,7 @@ export default function AdminPanel() {
                                     <option value="Religious">Religious</option>
                                     <option value="Spiritual">Spiritual</option>
                                     <option value="Relationship">Relationship</option>
+                                    <option value="Motivational">Motivational</option>
                                     <option value="Other">Other</option>
                                 </select>
                             </div>

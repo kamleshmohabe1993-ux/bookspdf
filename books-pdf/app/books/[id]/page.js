@@ -77,7 +77,7 @@ export default function BookDetailsPage() {
     const loadRatings = async () => {
         try {
             const response = await axios.get(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/ratings/${params.id}`
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/ratings/${params.id}`
             );
 
             if (response.data.success) {
@@ -101,7 +101,7 @@ export default function BookDetailsPage() {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/ratings/user/${params.id}`,
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/ratings/user/${params.id}`,
                 {
                     headers: { Authorization: `Bearer ${token}` }
                 }
@@ -151,7 +151,7 @@ export default function BookDetailsPage() {
             };
 
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/ratings`,
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:/api'}/ratings`,
                 ratingData,
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -185,7 +185,7 @@ export default function BookDetailsPage() {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.delete(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/ratings/${userExistingRating._id}`,
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/ratings/${userExistingRating._id}`,
                 {
                     headers: { Authorization: `Bearer ${token}` }
                 }

@@ -6,7 +6,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Book, Search, Download, Eye, Trash2, ArrowLeft, Filter, AlertCircle, Calendar, IndianRupee, Library, User, LogOut, Menu, X, Home, LayoutDashboard } from 'lucide-react';
 import { paymentAPI } from '@/lib/api';
 import showToast from '@/lib/toast';
-import { PageLoader, ButtonLoader } from '@/components/LoadingSpinner';
 import Footer from '@/components/Footer';
 
 export default function MyLibraryPage() {
@@ -104,10 +103,6 @@ export default function MyLibraryPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
         );
-    }
-
-    if (loading) {
-        return <PageLoader text="Loading your library..." />;
     }
 
     return (

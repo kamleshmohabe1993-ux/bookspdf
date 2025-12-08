@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { ArrowLeft, Home, BookOpen, Target, Eye, Heart, Award, Users, Zap, Shield, Mail, Phone, MapPin, User } from 'lucide-react';
-
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 export default function AboutUsPage() {
     const values = [
         {
@@ -65,7 +66,8 @@ export default function AboutUsPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
             {/* Header */}
-            <div className="bg-white shadow-sm sticky top-0 z-10">
+            <Header></Header>
+            {/* <div className="bg-white shadow-sm sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
                         <button
@@ -80,7 +82,7 @@ export default function AboutUsPage() {
                         <div className="w-20"></div>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Hero Section */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12 sm:py-20">
@@ -407,6 +409,7 @@ export default function AboutUsPage() {
                     </div>
                 </div>
             </div>
+            <Footer></Footer>
         </div>
     );
 }

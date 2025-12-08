@@ -7,7 +7,7 @@ import { Book, Search, LogIn, Download, Eye, Trash2, ArrowLeft, Filter, AlertCir
 import { bookAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import BookCard from '@/components/BookCard';
-import LoadingSpinner, { PageLoader, ButtonLoader } from '@/components/LoadingSpinner';
+import LoadingSpinner  from '@/components/LoadingSpinner';
 import PageLayout from '@/components/PageLayout';
 import showToast from '@/lib/toast';
 import { ChevronLeft, ChevronRight, Star, TrendingUp, Award, Zap, BookOpen, ShoppingCart, Heart } from 'lucide-react';
@@ -187,18 +187,12 @@ export default function Home() {
         loadCategories();
     }, [searchQuery, categoryFilter]);
 
-    const toggleMobileMenu = () => {
-        setMobileMenuOpen(!mobileMenuOpen);
-    };
 
     const closeMobileMenu = () => {
         setMobileMenuOpen(false);
     };
 
-    const handleNavigation = (path: string) => {
-        router.push(path);
-        closeMobileMenu();
-    };
+  
     
     // Filter function to remove unpublished books
     const filterPublishedBooks = (booksList: BookType[]) => {
@@ -298,9 +292,9 @@ export default function Home() {
     };
 
     // Show page loader while initial data is loading
-    if (loading && books.length === 0 && categories.length === 0) {
-        return <PageLoader text="Loading books..." />;
-    }
+    // if (loading && books.length === 0 && categories.length === 0) {
+    //     return <PageLoader text="Loading books..." />;
+    // }
 
     // Show carousel sections when no search/filter is applied
     const showCarousels = !searchQuery && !categoryFilter;
@@ -368,13 +362,8 @@ export default function Home() {
 
                 {/* Book Sections with Carousels */}
                 {loading ? (
-                    <div className="text-center py-12">
-                        <LoadingSpinner 
-                            size={50} 
-                            type="bounce" 
-                            color="#3B82F6"
-                            text="Loading books..." 
-                        />
+                    <div className="min-h-screen flex items-center justify-center">
+                        <LoadingSpinner type="book" size={100} text="loading books..." fullScreen />
                     </div>
                 ) : showCarousels ? (
                     <div className="space-y-16">

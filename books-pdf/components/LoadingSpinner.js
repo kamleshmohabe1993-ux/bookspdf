@@ -1,5 +1,4 @@
-'use client';
-
+import BookLoader from './BookLoader';
 import { ClipLoader, BounceLoader, PulseLoader, RingLoader } from 'react-spinners';
 
 const LoadingSpinner = ({ 
@@ -9,11 +8,13 @@ const LoadingSpinner = ({
     fullScreen = false,
     text = 'Loading...'
 }) => {
+
     const spinners = {
         clip: ClipLoader,
         bounce: BounceLoader,
         pulse: PulseLoader,
-        ring: RingLoader
+        ring: RingLoader,
+        book: BookLoader   // <-- Adding new custom loader
     };
 
     const SpinnerComponent = spinners[type] || ClipLoader;
@@ -21,7 +22,7 @@ const LoadingSpinner = ({
     const content = (
         <div className="flex flex-col items-center justify-center gap-4">
             <SpinnerComponent color={color} size={size} />
-            {text && <p className="text-gray-600 font-medium">{text}</p>}
+            {text && <p className="text-gray-600 font-medium animate-pulse">{text}</p>}
         </div>
     );
 
@@ -37,15 +38,3 @@ const LoadingSpinner = ({
 };
 
 export default LoadingSpinner;
-
-// Page Loading Component
-export const PageLoader = ({ text = 'Loading page...' }) => (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-        <LoadingSpinner size={60} type="ring" text={text} />
-    </div>
-);
-
-// Button Loading Component
-export const ButtonLoader = ({ size = 20, color = '#fff' }) => (
-    <ClipLoader color={color} size={size} />
-);

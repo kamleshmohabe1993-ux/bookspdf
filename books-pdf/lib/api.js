@@ -121,15 +121,15 @@ export const adminAPI = {
 
 export const ratingsAPI = {
     // Get all ratings for a book (public)
-    getBookRatings: (bookId) => api.get(`/api/rattings/${bookId}`),
+    getBookRatings: (bookId) => api.get(`/ratings/${bookId}`),
     
     // Get user's rating for a book (protected)
-    getUserRating: (bookId) => api.get(`/api/rattings/user/${bookId}`),
+    getUserRating: (bookId) => api.get(`/ratings/user/${bookId}`),
     
     // Add new rating (protected)
-    addRating: (data) => api.post('/api/rattings', data),
+    addRating: (data) => api.post('/ratings', data),
     
     // Delete rating (protected)
-    deleteRating: (ratingId) => api.delete(`/api/rattings/${ratingId}`)
+    deleteRating: (ratingId) => api.delete(`/ratings/${ratingId}`)
 };
 export default api;

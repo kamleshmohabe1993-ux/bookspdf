@@ -40,7 +40,7 @@ const bookSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['Education', 'Business', 'Design', 'Marketing', 'Religious', 'Spiritual', 'Relationship', 'Other',],
+        enum: ['Education', 'Business', 'Design', 'Marketing', 'Religious', 'Spiritual', 'Relationship', 'Motivational', 'Other',],
         default: 'Other'
     },
     downloadCount: {

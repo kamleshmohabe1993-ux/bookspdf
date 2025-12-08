@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, ArrowLeft, Home } from 'lucide-react';
-
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 export default function ContactPage() {
     const [formData, setFormData] = useState({
         name: '',
@@ -35,7 +36,8 @@ export default function ContactPage() {
     return (
         <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
             {/* Header/Breadcrumb */}
-            <div className="bg-white shadow-sm sticky top-0 z-10">
+            <Header></Header>
+            {/* <div className="bg-white shadow-sm sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
                         <button
@@ -50,7 +52,7 @@ export default function ContactPage() {
                         <div className="w-20"></div>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Hero Section */}
             <div className="bg-linear-to-r from-blue-600 to-purple-600 text-white py-8 sm:py-16">
@@ -319,6 +321,7 @@ export default function ContactPage() {
                     </div>
                 </div>
             </div>
+            <Footer></Footer>
         </div>
     );
 }
