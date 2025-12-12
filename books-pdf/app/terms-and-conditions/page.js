@@ -76,7 +76,7 @@ export default function TermsAndConditionsPage() {
                 <section className="mb-10">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">3. Account Registration</h2>
                     
-                    <h3 className="text-xl font-semibold mt-6 mb-3">3.1 Account Creation</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">3.1 Account Creation</h3>
                     <p className="text-gray-700">
                         To access certain features, you must create an account. You agree to:
                     </p>
@@ -88,7 +88,7 @@ export default function TermsAndConditionsPage() {
                         <li>Notify us immediately of any unauthorized use</li>
                     </ul>
 
-                    <h3 className="text-xl font-semibold mt-6 mb-3">3.2 Account Suspension</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">3.2 Account Suspension</h3>
                     <p className="text-gray-700">
                         We reserve the right to suspend or terminate your account if you violate these Terms or engage in fraudulent activity.
                     </p>
@@ -98,7 +98,7 @@ export default function TermsAndConditionsPage() {
                 <section className="mb-10">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">4. Use of Service</h2>
                     
-                    <h3 className="text-xl font-semibold mt-6 mb-3">4.1 Permitted Use</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">4.1 Permitted Use</h3>
                     <div className="space-y-2">
                         <div className="flex items-start gap-2">
                             <CheckCircle className="text-green-600 flex-shrink-0 mt-1" size={20} />
@@ -114,7 +114,7 @@ export default function TermsAndConditionsPage() {
                         </div>
                     </div>
 
-                    <h3 className="text-xl font-semibold mt-6 mb-3">4.2 Prohibited Use</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">4.2 Prohibited Use</h3>
                     <div className="space-y-2">
                         <div className="flex items-start gap-2">
                             <XCircle className="text-red-600 flex-shrink-0 mt-1" size={20} />
@@ -147,7 +147,7 @@ export default function TermsAndConditionsPage() {
                 <section className="mb-10">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">5. Purchases and Payments</h2>
                     
-                    <h3 className="text-xl font-semibold mt-6 mb-3">5.1 Pricing</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">5.1 Pricing</h3>
                     <ul className="list-disc list-inside space-y-2 text-gray-700">
                         <li>All prices are in Indian Rupees (INR)</li>
                         <li>Prices are inclusive of applicable taxes</li>
@@ -155,7 +155,7 @@ export default function TermsAndConditionsPage() {
                         <li>Price changes do not affect completed purchases</li>
                     </ul>
 
-                    <h3 className="text-xl font-semibold mt-6 mb-3">5.2 Payment Processing</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">5.2 Payment Processing</h3>
                     <ul className="list-disc list-inside space-y-2 text-gray-700">
                         <li>Payments are processed securely through PhonePe</li>
                         <li>We do not store your payment card details</li>
@@ -187,7 +187,7 @@ export default function TermsAndConditionsPage() {
                         </p>
                     </div>
 
-                    <h3 className="text-xl font-semibold mt-6 mb-3">6.1 Refund Eligibility</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">6.1 Refund Eligibility</h3>
                     <p className="text-gray-700 mb-2">You may request a refund if:</p>
                     <ul className="list-disc list-inside space-y-2 text-gray-700">
                         <li>The file is corrupted or cannot be opened</li>
@@ -196,7 +196,7 @@ export default function TermsAndConditionsPage() {
                         <li>You did not download the book within 48 hours of purchase</li>
                     </ul>
 
-                    <h3 className="text-xl font-semibold mt-6 mb-3">6.2 Refund Process</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">6.2 Refund Process</h3>
                     <ul className="list-disc list-inside space-y-2 text-gray-700">
                         <li>Submit refund request within 7 days of purchase</li>
                         <li>Provide transaction ID and reason for refund</li>
@@ -213,12 +213,12 @@ export default function TermsAndConditionsPage() {
                 <section className="mb-10">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">7. Intellectual Property Rights</h2>
                     
-                    <h3 className="text-xl font-semibold mt-6 mb-3">7.1 Our Content</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">7.1 Our Content</h3>
                     <p className="text-gray-700">
                         All content on BookMarket, including text, graphics, logos, and software, is owned by us or our licensors and protected by copyright laws.
                     </p>
 
-                    <h3 className="text-xl font-semibold mt-6 mb-3">7.2 eBook License</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">7.2 eBook License</h3>
                     <p className="text-gray-700 mb-2">
                         When you purchase an eBook, you receive a limited, non-exclusive, non-transferable license to:
                     </p>
@@ -313,7 +313,7 @@ export default function TermsAndConditionsPage() {
             <section className="mb-10">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">13. Termination</h2>
                 
-                <h3 className="text-xl font-semibold mt-6 mb-3">13.1 By You</h3>
+                <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">13.1 By You</h3>
                 <p className="text-gray-700">
                     You may terminate your account at any time by contacting customer support. Upon termination:
                 </p>
@@ -324,7 +324,7 @@ export default function TermsAndConditionsPage() {
                     <li>No refunds will be provided for unused account balance</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mt-6 mb-3">13.2 By Us</h3>
+                <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">13.2 By Us</h3>
                 <p className="text-gray-700">
                     We may suspend or terminate your account if:
                 </p>
@@ -340,12 +340,12 @@ export default function TermsAndConditionsPage() {
             <section className="mb-10">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">14. Dispute Resolution</h2>
                 
-                <h3 className="text-xl font-semibold mt-6 mb-3">14.1 Informal Resolution</h3>
+                <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">14.1 Informal Resolution</h3>
                 <p className="text-gray-700">
-                    Before filing a claim, please contact us at <a href="mailto:contact@booksnpdf.com" className="text-blue-600 hover:underline font-semibold">support@bookmarket.com</a> to resolve the issue informally.
+                    Before filing a claim, please contact us at <a href="mailto:contact@booksnpdf.com" className="text-blue-600 hover:underline font-semibold">contact@bookmarket.com</a> to resolve the issue informally.
                 </p>
 
-                <h3 className="text-xl font-semibold mt-6 mb-3">14.2 Arbitration</h3>
+                <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-3">14.2 Arbitration</h3>
                 <p className="text-gray-700">
                     If informal resolution fails, disputes shall be resolved through binding arbitration in accordance with Indian Arbitration and Conciliation Act, 1996.
                 </p>
@@ -385,8 +385,8 @@ export default function TermsAndConditionsPage() {
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                     <h3 className="font-bold text-lg mb-3">BooksnPDF Legal Team</h3>
                     <div className="space-y-2 text-gray-700">
-                        <p><strong>Email:</strong> <a href="mailto:legal@bookmarket.com" className="text-blue-600 hover:underline">legal@bookmarket.com</a></p>
-                        <p><strong>Phone:</strong> +91 98765 43210</p>
+                        <p><strong>Email:</strong> <a href="mailto:contact@bookmarket.com" className="text-blue-600 hover:underline">legal@bookmarket.com</a></p>
+                        <p><strong>Phone:</strong> +91 7999742458</p>
                         <p><strong>Address:</strong> 123 Book Street, Andheri East, Mumbai, Maharashtra 400069, India</p>
                         <p className="mt-4 text-sm"><strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 6:00 PM IST</p>
                     </div>

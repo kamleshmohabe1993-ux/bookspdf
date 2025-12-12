@@ -1,6 +1,6 @@
 const Rating = require('../models/Rating');
 const Book = require('../models/Book');
-
+const mongoose = require('mongoose');
 // @route   POST /api/ratings
 // @desc    Add or update a rating
 exports.addRating = async (req, res) => {
@@ -87,20 +87,18 @@ exports.getBookRatings = async (req, res) => {
         const { page = 1, limit = 10 } = req.query;
 
         const ratings = await Rating.find({ book: bookId })
-            .populate('user', 'fullName avatar')
+            .populate('user', 'fullName')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
-
         const total = await Rating.countDocuments({ book: bookId });
 
         // Get rating distribution
         const distribution = await Rating.aggregate([
-            { $match: { book: mongoose.Types.ObjectId(bookId) } },
+            { $match: { book: new mongoose.Types.ObjectId(bookId) } },
             { $group: { _id: '$rating', count: { $sum: 1 } } },
             { $sort: { _id: -1 } }
         ]);
-
         res.json({
             success: true,
             data: {

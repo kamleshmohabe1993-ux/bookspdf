@@ -79,11 +79,10 @@ export default function BookDetailsPage() {
             const response = await axios.get(
                 `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/ratings/${params.id}`
             );
-
+            console.log("response.data",response.data);
             if (response.data.success) {
-                const ratingsData = response.data.data || [];
+                const ratingsData = response.data.data.ratings || [];
                 setRatings(ratingsData);
-
                 // Calculate average rating
                 if (ratingsData.length > 0) {
                     const sum = ratingsData.reduce((acc, r) => acc + r.rating, 0);
@@ -626,7 +625,7 @@ export default function BookDetailsPage() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                                                     <span className="font-semibold text-sm sm:text-base text-gray-900 truncate">
-                                                        {rating.user?.name || 'Anonymous User'}
+                                                        {rating.user?.fullName || 'Anonymous User'}
                                                     </span>
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex items-center gap-1">
@@ -753,12 +752,12 @@ export default function BookDetailsPage() {
                                 value={userReview}
                                 onChange={(e) => setUserReview(e.target.value)}
                                 rows={4}
-                                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base"
+                                className="w-full px-3 sm:px-4 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base"
                                 placeholder="Share your thoughts about this book..."
-                                maxLength={500}
+                                maxLength={100}
                             />
                             <p className="text-xs text-gray-500 mt-1 text-right">
-                                {userReview.length}/500 characters
+                                {userReview.length}/100 characters
                             </p>
                         </div>
 
