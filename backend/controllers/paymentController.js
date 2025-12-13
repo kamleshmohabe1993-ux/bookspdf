@@ -2,7 +2,7 @@ const { phonePeClient } = require('../config/phonepe');
 const crypto = require('crypto');
 const Purchase = require('../models/Purchase');
 const Book = require('../models/Book');
-const userId = require('../models/User')
+
 // @route   POST /api/payments/initiate
 // @desc    Initiate PhonePe payment
 exports.initiatePayment = async (req, res) => {
@@ -52,14 +52,14 @@ exports.initiatePayment = async (req, res) => {
 
         console.log('📦 Creating purchase record...');
 
-        // Create purchase record
+        // Create purchase record - FIXED: Use correct enum value
         const purchase = await Purchase.create({
             user: userId,
             book: bookId,
             transactionId: merchantTransactionId,
             amount: book.price,
             paymentStatus: 'PENDING',
-            paymentGateway: 'phonepe'
+            paymentGateway: 'PhonePe' // Changed from 'phonepe' to match enum
         });
 
         console.log('✅ Purchase record created:', purchase._id);
@@ -123,8 +123,6 @@ exports.initiatePayment = async (req, res) => {
         });
     }
 };
-
-// ... rest of the controller functions remain the same
 
 // @route   POST /api/payments/callback
 // @desc    PhonePe payment callback webhook
@@ -491,7 +489,7 @@ exports.freeDownload = async (req, res) => {
             });
         }
 
-        // Create free download record
+        // Create free download record - FIXED: Use correct enum value
         const transactionId = `FREE${Date.now()}${userId.toString().slice(-6)}`;
         const downloadToken = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
@@ -502,7 +500,7 @@ exports.freeDownload = async (req, res) => {
             transactionId,
             amount: 0,
             paymentStatus: 'COMPLETED',
-            paymentGateway: 'free',
+            paymentGateway: 'Free', // Changed from 'free' to match enum
             downloadToken,
             downloadExpiresAt: expiresAt,
             maxDownloads: 100
@@ -554,3 +552,84 @@ exports.getMyPurchases = async (req, res) => {
         });
     }
 };
+
+
+// ============================================
+// PURCHASE MODEL - Update your model to this
+// ============================================
+
+/*
+// models/Purchase.js
+const mongoose = require('mongoose');
+
+const purchaseSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    book: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Book',
+        required: true
+    },
+    transactionId: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    amount: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'],
+        default: 'PENDING'
+    },
+    paymentGateway: {
+        type: String,
+        enum: ['PhonePe', 'Free', 'Razorpay', 'Paytm'], // FIXED: Correct enum values
+        required: true
+    },
+    downloadToken: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    downloadExpiresAt: {
+        type: Date
+    },
+    downloadCount: {
+        type: Number,
+        default: 0
+    },
+    maxDownloads: {
+        type: Number,
+        default: 5
+    },
+    phonepeResponse: {
+        type: Object
+    },
+    refundTransactionId: {
+        type: String
+    },
+    refundedAt: {
+        type: Date
+    },
+    purchasedAt: {
+        type: Date,
+        default: Date.now
+    }
+}, {
+    timestamps: true
+});
+
+// Indexes
+purchaseSchema.index({ user: 1, book: 1 });
+purchaseSchema.index({ transactionId: 1 });
+purchaseSchema.index({ downloadToken: 1 });
+
+module.exports = mongoose.model('Purchase', purchaseSchema);
+*/

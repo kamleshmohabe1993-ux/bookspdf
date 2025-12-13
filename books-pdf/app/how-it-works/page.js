@@ -284,7 +284,7 @@ export default function HowItWorksPage() {
                             Sign up for free and unlock exclusive benefits that enhance your reading experience.
                         </p>
                         <button
-                            onClick={() => window.location.href = '/signup'}
+                            onClick={() => window.location.href = '/register'}
                             className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl text-sm sm:text-base"
                         >
                             Get Started Free
@@ -397,7 +397,7 @@ export default function HowItWorksPage() {
                             Browse Books
                         </button>
                         <button
-                            onClick={() => window.location.href = '/signup'}
+                            onClick={() => window.location.href = '/register'}
                             className="px-8 py-4 bg-blue-700 text-white rounded-lg font-bold hover:bg-blue-800 transition-all shadow-lg text-sm sm:text-base"
                         >
                             Sign Up Free

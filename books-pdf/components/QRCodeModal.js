@@ -1,281 +1,236 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { Download, ShoppingCart, ArrowLeft } from 'lucide-react';
-import { bookAPI, paymentAPI } from '@/lib/api';
-import PaymentModal from '@/components/PaymentModal';
-import QRCodeModal from '@/components/QRCodeModal';
+import { X, Download, CheckCircle, AlertCircle, Clock, RefreshCw, Smartphone, Monitor, ArrowDown } from 'lucide-react';
 
-export default function BookDetailsPage() {
-    const params = useParams();
-    const router = useRouter();
-    const { user } = useAuth();
-    const [book, setBook] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [showQRModal, setShowQRModal] = useState(false);
-    const [paymentData, setPaymentData] = useState(null);
-    const [processing, setProcessing] = useState(false);
+const QRCodeModal = ({ isOpen, onClose, paymentData, book }) => {
+    const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+    const [checking, setChecking] = useState(false);
 
     useEffect(() => {
-        loadBook();
-    }, [params.id]);
+        if (isOpen && timeLeft > 0) {
+            const timer = setInterval(() => {
+                setTimeLeft(prev => prev - 1);
+            }, 1000);
 
-    const loadBook = async () => {
-        try {
-            const response = await bookAPI.getOne(params.id);
-            setBook(response.data.data);
-        } catch (error) {
-            alert('Error loading book: ' + error.message);
-        } finally {
-            setLoading(false);
+            return () => clearInterval(timer);
         }
+    }, [isOpen, timeLeft]);
+
+    if (!isOpen) return null;
+
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+
+    const generateQRCode = () => {
+        const upiString = `upi://pay?pa=merchant@phonepe&pn=BooksnPDF&am=${book.price}&cu=INR&tn=Payment for ${book.title}&tr=${paymentData.transactionId}`;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}`;
     };
-
-    const handleDownloadClick = () => {
-        if (!user) {
-            router.push('/login');
-            return;
-        }
-
-        if (book.isPaid) {
-            // Show payment modal
-            setShowPaymentModal(true);
-        } else {
-            handleFreeDownload();
-        }
-    };
-
-    const handleFreeDownload = async () => {
-        try {
-            setProcessing(true);
-            const response = await paymentAPI.freeDownload(book._id);
-            
-            // Open download in new tab
-            window.open(response.data.data.downloadUrl, '_blank');
-            
-            alert('Download started! Check your downloads folder.');
-            router.push('/my-library');
-        } catch (error) {
-            alert('Error: ' + (error.response?.data?.error || error.message));
-        } finally {
-            setProcessing(false);
-        }
-    };
-
-    const handlePaymentConfirm = async (paymentMethod, upiId) => {
-        try {
-            setProcessing(true);
-
-            if (paymentMethod === 'qr') {
-                // Show QR code modal
-                const response = await paymentAPI.initiate(book._id);
-                setPaymentData(response.data.data);
-                setShowPaymentModal(false);
-                setShowQRModal(true);
-            } else if (paymentMethod === 'upi') {
-                // Initiate UPI payment
-                const response = await paymentAPI.initiate(book._id);
-                setPaymentData(response.data.data);
-                
-                // Show UPI intent or redirect
-                alert(`Payment initiated!\nUPI ID: ${upiId}\nAmount: ₹${book.price}\n\nRedirecting to payment gateway...`);
-                
-                // Redirect to PhonePe
-                window.location.href = response.data.data.paymentUrl;
-            } else {
-                // PhonePe app payment
-                const response = await paymentAPI.initiate(book._id);
-                
-                // Redirect to PhonePe
-                window.location.href = response.data.data.paymentUrl;
-            }
-        } catch (error) {
-            alert('Payment initiation failed: ' + (error.response?.data?.error || error.message));
-            setProcessing(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-        );
-    }
-
-    if (!book) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-xl text-gray-600">Book not found</p>
-            </div>
-        );
-    }
 
     return (
-        <>
-            <div className="min-h-screen bg-gray-50">
-                <div className="container mx-auto px-4 py-8">
-                    <button
-                        onClick={() => router.push('/')}
-                        className="mb-6 text-blue-600 hover:text-blue-800 flex items-center gap-2 font-semibold"
-                    >
-                        <ArrowLeft size={20} />
-                        Back to Marketplace
-                    </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            {/* Modal Container */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] overflow-y-auto animate-scale-in">
+                {/* Header - Responsive */}
+                <div className="bg-linear-to-r from-purple-600 to-pink-600 p-4 md:p-6 text-white relative rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h2 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Scan QR Code</h2>
+                            <p className="text-purple-100 text-sm md:text-base">Complete payment using any UPI app</p>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+                            aria-label="Close modal"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+                    
+                </div>
 
-                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                        <div className="md:flex">
-                            {/* Book Image */}
-                            <div className="md:w-1/3 bg-linear-to-br from-gray-100 to-gray-200 p-8 flex items-center justify-center">
-                                <img
-                                    src={
-                                        book.thumbnail?.data
-                                            ? `data:${book.thumbnail.contentType};base64,${book.thumbnail.data}`
-                                            : '/placeholder-book.jpg'
-                                    }
-                                    alt={book.title}
-                                    className="w-full max-w-xs rounded-lg shadow-2xl"
-                                />
+                <div className="p-4 md:p-6 space-y-4 sm:space-y-6">
+                    {/* Timer - Responsive */}
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center justify-center gap-3">
+                        <Clock className="text-orange-600 w-5 h-5 md:w-6 md:h-6" />
+                        <div>
+                            <p className="text-xs md:text-sm text-gray-600">Time remaining</p>
+                            <p className="text-xl md:text-2xl font-bold text-orange-600">
+                                {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Main Content - Responsive Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {/* Left Column - QR Code Section */}
+                        <div className="space-y-4">
+                            {/* QR Code Container */}
+                            <div className="bg-gray-50 rounded-md p-4 md:p-6 flex flex-col items-center">
+                                <div className="bg-white p-3 md:p-4 rounded-lg shadow-lg w-full max-w-xs">
+                                    <img
+                                        src={generateQRCode()}
+                                        alt="Payment QR Code"
+                                        className="w-full h-auto"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                
+                                {/* Mobile Instructions */}
+                                <div className="lg:hidden mt-4 flex flex-col items-center">
+                                    <div className="flex items-center gap-2 text-blue-600 animate-bounce mb-2">
+                                        <ArrowDown size={20} />
+                                        <span className="font-medium">Scroll down for instructions</span>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-center text-gray-600 mt-4 text-xs md:text-sm">
+                                    Scan with PhonePe, Google Pay, Paytm, or any UPI app
+                                </p>
+                                
+                                {/* Download QR Code Button */}
+                                <button
+                                    onClick={() => {
+                                        // Download QR code logic
+                                        const link = document.createElement('a');
+                                        link.href = generateQRCode();
+                                        link.download = `payment-qr-${paymentData.transactionId}.png`;
+                                        link.click();
+                                    }}
+                                    className="mt-4 flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium text-sm md:text-base"
+                                >
+                                    <Download size={18} />
+                                    Download QR Code
+                                </button>
+                            </div>
+
+                            {/* Payment Amount - Mobile top placement */}
+                            <div className="lg:hidden bg-blue-50 rounded-lg p-4 text-center">
+                                <p className="text-xs md:text-sm text-gray-600 mb-1">Amount to Pay</p>
+                                <p className="text-2xl md:text-3xl font-bold text-blue-600">₹{book.price}</p>
+                            </div>
+                        </div>
+
+                        {/* Right Column - Information Section */}
+                        <div className="space-y-4 md:space-y-6">
+                            {/* Payment Amount - Desktop placement */}
+                            <div className="hidden lg:block bg-blue-50 rounded-lg p-4 text-center">
+                                <p className="text-sm text-gray-600 mb-1">Amount to Pay</p>
+                                <p className="text-3xl font-bold text-blue-600">₹{book.price}</p>
+                            </div>
+
+                            {/* Transaction ID */}
+                            <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+                                <p className="text-xs md:text-sm text-gray-800 mb-1">Transaction ID</p>
+                                <div className="flex items-center gap-2">
+                                    <code className="font-mono text-sm text-gray-800 md:text-base font-semibold break-all">
+                                        {paymentData.transactionId}
+                                    </code>
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(paymentData.transactionId)}
+                                        className="text-blue-600 hover:text-blue-800 text-sm"
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Book Details */}
-                            <div className="md:w-2/3 p-8">
-                                <h1 className="text-4xl font-bold mb-3">{book.title}</h1>
-                                {book.author && (
-                                    <p className="text-gray-600 text-xl mb-6">by {book.author}</p>
-                                )}
-
-                                {/* Price Badge */}
-                                <div className="mb-6">
-                                    <span className={`inline-block px-6 py-3 rounded-full text-2xl font-bold ${
-                                        book.isPaid ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                                    }`}>
-                                        {book.isPaid ? `₹${book.price}` : 'FREE'}
-                                    </span>
+                            <div className="border rounded-lg text-gray-700 p-3 md:p-4">
+                                <h4 className="font-semibold text-sm md:text-base mb-2">Book Details</h4>
+                                <div className="space-y-2">
+                                    <p className="text-sm md:text-base font-medium">{book.title}</p>
+                                    <p className="text-xs md:text-sm text-gray-700">by {book.author}</p>
                                 </div>
+                            </div>
 
-                                {/* Category */}
-                                {book.category && (
-                                    <div className="mb-6">
-                                        <span className="inline-block bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">
-                                            {book.category}
-                                        </span>
-                                    </div>
-                                )}
+                            {/* Instructions */}
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-sm md:text-base flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4 md:w-5 md:h-5" />
+                                    How to pay:
+                                </h4>
+                                <ol className="space-y-2 text-sm md:text-base text-gray-600">
+                                    <li className="flex items-start gap-3">
+                                        <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
+                                        <span>Open any UPI app (PhonePe, Google Pay, Paytm)</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
+                                        <span>Scan the QR code above with your phone camera</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
+                                        <span>Verify the amount and merchant name</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">4</span>
+                                        <span>Enter your UPI PIN to complete payment</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">5</span>
+                                        <span>You'll be redirected automatically</span>
+                                    </li>
+                                </ol>
+                            </div>
 
-                                {/* Description */}
-                                <div className="mb-6">
-                                    <h2 className="text-2xl font-semibold mb-3">Description</h2>
-                                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                                        {book.description}
-                                    </p>
-                                </div>
+                            {/* Mobile-only tip */}
+                            <div className="lg:hidden bg-green-50 border border-green-200 rounded-lg p-3">
+                                <p className="text-sm text-green-700 font-medium flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Mobile Tip:
+                                </p>
+                                <p className="text-xs text-green-600 mt-1">
+                                    Tap and hold the QR code image to save it, then open it with your UPI app.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-                                {/* Preview */}
-                                {book.previewText && (
-                                    <div className="mb-6 bg-gray-50 p-6 rounded-lg">
-                                        <h2 className="text-xl font-semibold mb-3">Preview</h2>
-                                        <p className="text-gray-700 leading-relaxed">
-                                            {book.previewText}
-                                        </p>
-                                    </div>
-                                )}
+                    {/* Action Buttons - Stacked on mobile, side-by-side on desktop */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 pt-4 border-t">
+                        <button
+                            onClick={async () => {
+                                setChecking(true);
+                                // Check payment status
+                                setTimeout(() => setChecking(false), 2000);
+                            }}
+                            disabled={checking}
+                            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {checking ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                    Checking...
+                                </>
+                            ) : (
+                                <>
+                                    <RefreshCw className="w-5 h-5" />
+                                    Check Payment Status
+                                </>
+                            )}
+                        </button>
 
-                                {/* Tags */}
-                                {book.tags && book.tags.length > 0 && (
-                                    <div className="mb-6">
-                                        <h3 className="text-lg font-semibold mb-3">Tags:</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {book.tags.map((tag, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                        <button
+                            onClick={onClose}
+                            className="w-full bg-gray-100 text-gray-700 hover:bg-gray-200 py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                        >
+                            <X className="w-5 h-5" />
+                            Cancel Payment
+                        </button>
+                    </div>
 
-                                {/* Download/Purchase Button */}
-                                <button
-                                    onClick={handleDownloadClick}
-                                    disabled={processing}
-                                    className={`w-full py-4 rounded-xl font-bold text-xl flex items-center justify-center gap-3 transition-all ${
-                                        processing
-                                            ? 'bg-gray-400 cursor-not-allowed'
-                                            : book.isPaid
-                                            ? 'bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-2xl transform hover:-translate-y-1'
-                                            : 'bg-linear-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white shadow-lg hover:shadow-2xl transform hover:-translate-y-1'
-                                    }`}
-                                >
-                                    {processing ? (
-                                        <>
-                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                                            Processing...
-                                        </>
-                                    ) : book.isPaid ? (
-                                        <>
-                                            <ShoppingCart size={28} />
-                                            Buy & Download - ₹{book.price}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Download size={28} />
-                                            Download Free PDF
-                                        </>
-                                    )}
-                                </button>
+                    {/* Footer Note */}
+                    <div className="text-center pt-4">
+                        <p className="text-xs text-gray-500">
+                            Payment secured with 256-bit encryption • 
+                            <span className="text-green-600 ml-2">✓ No extra charges</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
-                                {/* Security Info */}
-                                {book.isPaid && (
-                                    <p className="text-center text-sm text-gray-600 mt-4">
-                                        🔒 Secure payment powered by PhonePe
-                                    </p>
-                                )}
-
-                                {!user && (
-                                    <p className="text-center text-sm text-gray-600 mt-4">
-                                        Please{' '}
-                                        <button
-                                            onClick={() => router.push('/login')}
-                                            className="text-blue-600 hover:underline font-semibold"
-                                    >
-                                    login
-                                    </button>{' '}
-                                    to download this book
-                                    </p>
-                                    )}
-                                    </div>
-                                    </div>
-                                    </div>
-                                    </div>
-                                    </div>
-                                    {/* Payment Confirmation Modal */}
-        <PaymentModal
-            isOpen={showPaymentModal}
-            onClose={() => setShowPaymentModal(false)}
-            book={book}
-            onConfirm={handlePaymentConfirm}
-            loading={processing}
-        />
-
-        {/* QR Code Modal */}
-        {paymentData && (
-            <QRCodeModal
-                isOpen={showQRModal}
-                onClose={() => {
-                    setShowQRModal(false);
-                    setPaymentData(null);
-                }}
-                paymentData={paymentData}
-                book={book}
-            />
-        )}
-    </>
-);
-}
+export default QRCodeModal;

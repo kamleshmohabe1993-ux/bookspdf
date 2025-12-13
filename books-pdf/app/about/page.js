@@ -395,7 +395,7 @@ export default function AboutUsPage() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button
-                            onClick={() => window.location.href = '/signup'}
+                            onClick={() => window.location.href = '/register'}
                             className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
                         >
                             Get Started Free

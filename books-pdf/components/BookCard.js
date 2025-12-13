@@ -30,53 +30,95 @@ const BookCard = ({ book }) => {
         );
     };
     const handleShare = async () => {
-        const shareUrl = `${window.location.origin}/books/${book._id}`;
-        const shareText = `Check out "${book.title}" by ${book.author || 'Unknown Author'} on BookMarket!`;
+    const shareUrl = `${window.location.origin}/books/${book._id}`;
+    const shareText = `Check out "${book.title}" by ${book.author || 'Unknown Author'} on BookMarket!`;
 
-        // Check if Web Share API is supported
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: book.title,
-                    text: shareText,
-                    url: shareUrl,
-                });
-            } catch (error) {
-                console.log('Error sharing:', error);
+    // Check if Web Share API is supported
+    if (navigator.share) {
+        try {
+            // Check if the browser supports sharing files
+            const shareData = {
+                title: book.title,
+                text: shareText,
+                url: shareUrl,
+            };
+
+            // If thumbnail exists, convert base64 to File and add to share
+            if (book.thumbnail && navigator.canShare) {
+                try {
+                    // Convert base64 to blob
+                    const base64Data = book.thumbnail.includes('base64,') 
+                        ? book.thumbnail.split('base64,')[1] 
+                        : book.thumbnail;
+                    
+                    const byteCharacters = atob(base64Data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    
+                    // Determine image type from base64 string
+                    const mimeType = book.thumbnail.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+                    const blob = new Blob([byteArray], { type: mimeType });
+                    
+                    // Create file from blob
+                    const file = new File([blob], `${book.title}.jpg`, { type: mimeType });
+                    
+                    // Check if files can be shared
+                    shareData.files = [file];
+                    if (navigator.canShare(shareData)) {
+                        await navigator.share(shareData);
+                        return;
+                    }
+                } catch (fileError) {
+                    console.log('Could not share with image, sharing without it:', fileError);
+                    // Continue to share without image
+                }
             }
-        } else {
-            // Fallback: Copy to clipboard
-            try {
-                await navigator.clipboard.writeText(shareUrl);
-                setShowShareTooltip(true);
-                setTimeout(() => setShowShareTooltip(false), 2000);
-            } catch (error) {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = shareUrl;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                setShowShareTooltip(true);
-                setTimeout(() => setShowShareTooltip(false), 2000);
-            }
+
+            // Share without image if image sharing failed or not available
+            await navigator.share({
+                title: book.title,
+                text: shareText,
+                url: shareUrl,
+            });
+        } catch (error) {
+            console.log('Error sharing:', error);
         }
+    } else {
+        // Fallback: Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setShowShareTooltip(true);
+            setTimeout(() => setShowShareTooltip(false), 2000);
+        } catch (error) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = shareUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setShowShareTooltip(true);
+            setTimeout(() => setShowShareTooltip(false), 2000);
+        }
+    }
+};
+
+const handleSocialShare = (platform) => {
+    const shareUrl = `${window.location.origin}/books/${book._id}`;
+    const shareText = `Check out "${book.title}" by ${book.author || 'Unknown Author'} on BookMarket!`;
+    
+    const urls = {
+        twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+        whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`
     };
 
-    const handleSocialShare = (platform) => {
-        const shareUrl = `${window.location.origin}/books/${book._id}`;
-        const shareText = `Check out "${book.title}" by ${book.author || 'Unknown Author'} on BookMarket!`;
-        
-        const urls = {
-            twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
-            whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`
-        };
-
-        window.open(urls[platform], '_blank', 'width=600,height=400');
-    };
+    window.open(urls[platform], '_blank', 'width=600,height=400');
+};
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-200 card-hover group flex flex-col h-full">

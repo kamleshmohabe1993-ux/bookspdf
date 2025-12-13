@@ -79,7 +79,6 @@ export default function BookDetailsPage() {
             const response = await axios.get(
                 `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/ratings/${params.id}`
             );
-            console.log("response.data",response.data);
             if (response.data.success) {
                 const ratingsData = response.data.data.ratings || [];
                 setRatings(ratingsData);
@@ -227,21 +226,58 @@ export default function BookDetailsPage() {
         }
     };
 
-    const handlePaymentConfirm = async () => {
-    try {
-        setProcessing(true);
+    const handlePaymentConfirm = async (paymentMethod, upiId) => {
+        console.log('💳 Payment method selected:', paymentMethod);
         
-        // Initiate payment with backend
-        const response = await paymentAPI.initiate(book._id);
-        
-        const { paytmParams, orderId } = response.data.data;
-        
-        // Redirect to Paytm payment page
-        const params = encodeURIComponent(JSON.stringify(paytmParams));
-        router.push(`/payment/process?params=${params}&orderId=${orderId}`);
-        
+        try {
+            setProcessing(true);
+
+            // Initiate payment first
+            console.log('🔄 Initiating payment...');
+            const response = await paymentAPI.initiate(book._id);
+            console.log('✅ Payment initiated:', response.data);
+
+            setPaymentData(response.data.data);
+
+            if (paymentMethod === 'qr') {
+                // Show QR code modal
+                console.log('📱 Showing QR code...');
+                setShowPaymentModal(false);
+                setShowQRModal(true);
+                setProcessing(false);
+            } else if (paymentMethod === 'upi') {
+                // Create UPI deep link
+                console.log('📱 Creating UPI link for:', upiId);
+                const upiString = `upi://pay?pa=${upiId}&pn=BookMarket&am=${book.price}&cu=INR&tn=Payment for ${book.title}&tr=${response.data.data.transactionId}`;
+                
+                // Show confirmation
+                const confirmed = window.confirm(
+                    `Payment Details:\n\n` +
+                    `UPI ID: ${upiId}\n` +
+                    `Amount: ₹${book.price}\n` +
+                    `Book: ${book.title}\n\n` +
+                    `Click OK to open your UPI app`
+                );
+
+                if (confirmed) {
+                    // Try to open UPI app
+                    window.location.href = upiString;
+                    
+                    // Also redirect to PhonePe as fallback
+                    setTimeout(() => {
+                        window.location.href = response.data.data.paymentUrl;
+                    }, 1000);
+                }
+            } else {
+                // PhonePe app payment - redirect
+                console.log('🔄 Redirecting to PhonePe...');
+                setTimeout(() => {
+                    window.location.href = response.data.data.paymentUrl;
+                }, 500);
+            }
         } catch (error) {
-            showToast.error('Payment initiation failed');
+            console.error('❌ Payment error:', error);
+            alert('Payment initiation failed: ' + (error.response?.data?.error || error.message));
             setProcessing(false);
         }
     };
@@ -541,7 +577,9 @@ export default function BookDetailsPage() {
                                             </>
                                         )}
                                     </button>
-
+                                        <div>
+                                            <span className="font-md text-red-700">Note: The Payment Page Under Maintenance!</span>
+                                        </div>
                                     {/* Visual Indicator - Responsive */}
                                     {book.isPaid && !processing && (
                                         <div className="bg-linear-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-3 sm:p-4 text-center">

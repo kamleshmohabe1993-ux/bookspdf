@@ -111,8 +111,8 @@ const purchaseSchema = new mongoose.Schema({
     },
     paymentGateway: {
         type: String,
-        enum: ['paytm', 'free'],
-        default: 'paytm'
+        enum: ['PhonePe', 'Free', 'Paytm'], // FIXED: Correct enum values
+        required: true
     },
     
     // Paytm specific fields

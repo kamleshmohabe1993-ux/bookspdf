@@ -102,19 +102,19 @@ const Footer = () => {
                         <h3 className="font-bold text-lg mb-4">Contact Us</h3>
                         <ul className="space-y-3 text-gray-400">
                             <li className="flex items-start gap-2">
-                                <Mail className="flex-shrink-0 mt-1" size={18} />
+                                <Mail className="shrink-0 mt-1" size={18} />
                                 <a href="mailto:contact@booksnpdf.com" className="hover:text-white transition-colors">
                                     contact@booksnpdf.com
                                 </a>
                             </li>
                             <li className="flex items-start gap-2">
-                                <Phone className="flex-shrink-0 mt-1" size={18} />
+                                <Phone className="shrink-0 mt-1" size={18} />
                                 <a href="tel:+919876543210" className="hover:text-white transition-colors">
-                                    +91 98765 43210
+                                    +91 79997 42458
                                 </a>
                             </li>
                             <li className="flex items-start gap-2">
-                                <MapPin className="flex-shrink-0 mt-1" size={18} />
+                                <MapPin className="shrink-0 mt-1" size={18} />
                                 <span>Mumbai, Maharashtra, India</span>
                             </li>
                         </ul>
