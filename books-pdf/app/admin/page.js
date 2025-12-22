@@ -232,12 +232,34 @@ export default function AdminPanel() {
                         </button>
                         
                         {/* Desktop Back Button */}
-                        <button
+                        <div>
+                            <button
                             onClick={() => router.push('/')}
                             className="hidden md:block px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors"
-                        >
-                            Back to Home
-                        </button>
+                            >
+                                Back to Home
+                            </button>
+                        </div>
+                        <div>
+                            <button
+                            onClick={() => {
+                                router.push('/admin/user-dashboard');
+                            }}
+                            className="hidden md:block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-yellow-300 items-center gap-3"
+                            >
+                                <span>Users</span>
+                            </button>
+                        </div>
+                        <div>
+                            <button
+                            onClick={() => {
+                                router.push('/admin/transactions');
+                            }}
+                            className="hidden md:block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-yellow-300 items-center gap-3"
+                            >
+                                <span>Transections</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -257,6 +279,12 @@ export default function AdminPanel() {
                                 className="md:hidden px-3 py-1 text-sm bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300"
                             >
                                 Home
+                            </button>
+                            <button
+                                onClick={() => router.push('/admin/transactions')}
+                                className="md:hidden px-3 py-1 text-sm bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300"
+                            >
+                                Trans
                             </button>
                         </div>
                         
