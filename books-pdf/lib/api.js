@@ -30,7 +30,15 @@ export const authAPI = {
     changePassword: (data) => api.put('/auth/change-password', data),
     forgotPassword: (data) => api.post('/auth/forgot-password', data),
     verifyResetPassword: (data) => api.post('/auth/verify-reset-otp', data),
-    resetPassword: (data) => api.post('/auth/reset-password', data)
+    resetPassword: (data) => api.post('/auth/reset-password', data),
+    getAllUsers: () => api.get('/auth/users'),
+    getUserStats: () => api.get('/auth/userstats'),
+    exportUsers: () => api.get('//auth/exportusers'),
+    getUserById: (data) => api.get('/auth/:id', data),
+    toggleUserStatus: (data) => api.put('/auth/:id/toggle-status', data),
+    verifyUser: (data) => api.put('/auth/:id/verify', data),
+    deleteUser: (data) => api.delete('/auth/:id', data),
+    bulkUserAction: (data) => api.post('/auth/bulk-action', data),
 };
 
 // Books API
@@ -86,7 +94,13 @@ export const paymentAPI = {
     
     // Get payment status
     getStatus: (transactionId) => api.get(`/payments/status/${transactionId}`),
-    getMyPurchases: () => api.get('/payments/my-purchases')
+    getMyPurchases: () => api.get('/payments/my-purchases'),
+
+    // Get all payments
+    getAllTransactions: () => api.get('/payments/transactions'),
+    deleteTransaction: (data) => api.delete('/payments/:id', data),
+    cleanupFailedTransactions: (data) => api.delete('/payments/bulk-delete', data),
+    bulkDeleteTransactions: (data) => api.delete('/payments/cleanup', data),
 };
 
 // Orders API

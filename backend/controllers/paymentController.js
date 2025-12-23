@@ -554,6 +554,296 @@ exports.getMyPurchases = async (req, res) => {
 };
 
 
+// @route   GET /api/payments/admin/transactions
+// @desc    Get all transactions (Admin only)
+// @access  Private (Admin)
+exports.getAllTransactions = async (req, res) => {
+    try {
+        // Verify admin access
+        if (!req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied. Admin privileges required.'
+            });
+        }
+
+        // Get query parameters for filtering (optional - for future backend filtering)
+        const { status, page = 1, limit = 100, search } = req.query;
+
+        // Build query
+        let query = {};
+
+        // Filter by status if provided
+        if (status && status !== 'all') {
+            query.paymentStatus = status;
+        }
+
+        // Search functionality (optional)
+        if (search) {
+            // This would require text indexes on the Purchase model
+            query.$or = [
+                { transactionId: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Fetch all transactions with populated user and book details
+        const transactions = await Purchase.find(query)
+            .populate('user', 'fullName email mobileNumber') // Populate user details
+            .populate('book', 'title author thumbnail price category') // Populate book details
+            .sort({ purchasedAt: -1 }) // Sort by most recent first
+            .lean(); // Convert to plain JavaScript objects for better performance
+
+        // Calculate statistics
+        const stats = {
+            total: transactions.length,
+            completed: transactions.filter(t => t.paymentStatus === 'COMPLETED').length,
+            pending: transactions.filter(t => t.paymentStatus === 'PENDING').length,
+            failed: transactions.filter(t => t.paymentStatus === 'FAILED').length,
+            refunded: transactions.filter(t => t.paymentStatus === 'REFUNDED').length,
+            totalRevenue: transactions
+                .filter(t => t.paymentStatus === 'COMPLETED')
+                .reduce((sum, t) => sum + (t.amount || 0), 0)
+        };
+
+        res.json({
+            success: true,
+            count: transactions.length,
+            stats,
+            data: transactions
+        });
+
+    } catch (error) {
+        console.error('Get transactions error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch transactions: ' + error.message
+        });
+    }
+};
+
+// @route   GET /api/payments/admin/transactions/:id
+// @desc    Get single transaction details (Admin only)
+// @access  Private (Admin)
+exports.getTransactionById = async (req, res) => {
+    try {
+        if (!req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied. Admin privileges required.'
+            });
+        }
+
+        const transaction = await Purchase.findById(req.params.id)
+            .populate('user', 'fullName email mobileNumber')
+            .populate('book', 'title author thumbnail price category');
+
+        if (!transaction) {
+            return res.status(404).json({
+                success: false,
+                error: 'Transaction not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: transaction
+        });
+
+    } catch (error) {
+        console.error('Get transaction error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+// @route   GET /api/payments/admin/stats
+// @desc    Get transaction statistics (Admin only)
+// @access  Private (Admin)
+exports.getTransactionStats = async (req, res) => {
+    try {
+        if (!req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied'
+            });
+        }
+
+        const { startDate, endDate } = req.query;
+
+        // Build date filter if provided
+        let dateFilter = {};
+        if (startDate || endDate) {
+            dateFilter.purchasedAt = {};
+            if (startDate) dateFilter.purchasedAt.$gte = new Date(startDate);
+            if (endDate) dateFilter.purchasedAt.$lte = new Date(endDate);
+        }
+
+        // Get all transactions
+        const transactions = await Purchase.find(dateFilter);
+
+        // Calculate detailed statistics
+        const stats = {
+            overview: {
+                total: transactions.length,
+                completed: transactions.filter(t => t.paymentStatus === 'COMPLETED').length,
+                pending: transactions.filter(t => t.paymentStatus === 'PENDING').length,
+                failed: transactions.filter(t => t.paymentStatus === 'FAILED').length,
+                refunded: transactions.filter(t => t.paymentStatus === 'REFUNDED').length
+            },
+            revenue: {
+                total: transactions
+                    .filter(t => t.paymentStatus === 'COMPLETED')
+                    .reduce((sum, t) => sum + t.amount, 0),
+                refunded: transactions
+                    .filter(t => t.paymentStatus === 'REFUNDED')
+                    .reduce((sum, t) => sum + t.amount, 0),
+                pending: transactions
+                    .filter(t => t.paymentStatus === 'PENDING')
+                    .reduce((sum, t) => sum + t.amount, 0)
+            },
+            paymentGateways: {
+                PhonePe: transactions.filter(t => t.paymentGateway === 'PhonePe').length,
+                Free: transactions.filter(t => t.paymentGateway === 'Free').length,
+                Razorpay: transactions.filter(t => t.paymentGateway === 'Razorpay').length
+            },
+            recentTransactions: await Purchase.find(dateFilter)
+                .sort({ purchasedAt: -1 })
+                .limit(5)
+                .populate('user', 'fullName')
+                .populate('book', 'title')
+        };
+
+        res.json({
+            success: true,
+            data: stats
+        });
+
+    } catch (error) {
+        console.error('Get stats error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+// @route   PUT /api/payments/admin/transactions/:id/status
+// @desc    Update transaction status (Admin only)
+// @access  Private (Admin)
+exports.updateTransactionStatus = async (req, res) => {
+    try {
+        if (!req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied'
+            });
+        }
+
+        const { status, note } = req.body;
+        const validStatuses = ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'];
+
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid status value'
+            });
+        }
+
+        const transaction = await Purchase.findById(req.params.id);
+
+        if (!transaction) {
+            return res.status(404).json({
+                success: false,
+                error: 'Transaction not found'
+            });
+        }
+
+        // Update status
+        transaction.paymentStatus = status;
+        
+        // Add admin note if provided
+        if (note) {
+            if (!transaction.adminNotes) {
+                transaction.adminNotes = [];
+            }
+            transaction.adminNotes.push({
+                note,
+                updatedBy: req.user._id,
+                updatedAt: new Date()
+            });
+        }
+
+        await transaction.save();
+
+        res.json({
+            success: true,
+            message: 'Transaction status updated successfully',
+            data: transaction
+        });
+
+    } catch (error) {
+        console.error('Update status error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+// @route   GET /api/payments/admin/export
+// @desc    Export transactions to CSV (Admin only)
+// @access  Private (Admin)
+exports.exportTransactions = async (req, res) => {
+    try {
+        if (!req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied'
+            });
+        }
+
+        const { status, startDate, endDate } = req.query;
+
+        // Build query
+        let query = {};
+        if (status && status !== 'all') {
+            query.paymentStatus = status;
+        }
+        if (startDate || endDate) {
+            query.purchasedAt = {};
+            if (startDate) query.purchasedAt.$gte = new Date(startDate);
+            if (endDate) query.purchasedAt.$lte = new Date(endDate);
+        }
+
+        const transactions = await Purchase.find(query)
+            .populate('user', 'fullName email')
+            .populate('book', 'title')
+            .sort({ purchasedAt: -1 });
+
+        // Create CSV content
+        const csvHeader = 'Transaction ID,User,Email,Book,Amount,Status,Payment Gateway,Date\n';
+        const csvRows = transactions.map(txn => {
+            return `${txn.transactionId},${txn.user?.fullName || 'N/A'},${txn.user?.email || 'N/A'},${txn.book?.title || 'N/A'},${txn.amount},${txn.paymentStatus},${txn.paymentGateway},${new Date(txn.purchasedAt).toISOString()}`;
+        }).join('\n');
+
+        const csv = csvHeader + csvRows;
+
+        // Set headers for file download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=transactions-${Date.now()}.csv`);
+        res.send(csv);
+
+    } catch (error) {
+        console.error('Export error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
 // ============================================
 // PURCHASE MODEL - Update your model to this
 // ============================================

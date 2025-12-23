@@ -18,6 +18,10 @@ export default function TransactionsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
+    // Store the current page URL
+        const currenturl = `/admin/transactions`;
+        localStorage.setItem('redirectAfterLogin', currenturl);
+
     useEffect(() => {
         if (user?.isAdmin) {
             loadTransactions();
@@ -115,6 +119,7 @@ export default function TransactionsPage() {
             .reduce((sum, t) => sum + t.amount, 0)
     };
 
+    
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header - Responsive */}
@@ -240,6 +245,9 @@ export default function TransactionsPage() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                         Date
                                     </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                        Action
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -297,7 +305,7 @@ export default function TransactionsPage() {
                         </table>
                     </div>
                 </div>
-
+                
                 {/* Mobile Card View */}
                 <div className="md:hidden space-y-3">
                     {loading ? (

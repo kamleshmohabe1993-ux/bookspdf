@@ -30,6 +30,10 @@ export default function AdminPanel() {
     });
     const [editingId, setEditingId] = useState(null);
 
+    // Store the current page URL
+        const currenturl = `/admin`;
+        localStorage.setItem('redirectAfterLogin', currenturl);
+
     useEffect(() => {
         if (!authLoading && (!user || !user.isAdmin)) {
             router.push('/');

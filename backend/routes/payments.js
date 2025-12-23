@@ -10,9 +10,14 @@ const {
     initiateRefund,
     getDownloadLink,
     freeDownload,
-    getMyPurchases
+    getMyPurchases,
+    getAllTransactions,
+    getTransactionById,
+    getTransactionStats,
+    updateTransactionStatus,
+    exportTransactions,
 } = require('../controllers/paymentController');
-
+const {deleteTransaction,cleanupFailedTransactions,bulkDeleteTransactions } = require('../controllers/transactionsController')
 // Public routes
 router.post('/callback', paymentCallback); // PhonePe webhook (no auth)
 
@@ -22,12 +27,46 @@ router.get('/status/:transactionId', protect, checkPaymentStatus);
 router.post('/free-download/:bookId', protect, freeDownload);
 router.get('/my-purchases', protect, getMyPurchases);
 
+// Admin transaction routes
+router.get('/transactions', protect, adminOnly, getAllTransactions);
+router.get('/transactions/:id', protect, adminOnly, getTransactionById);
+router.get('/stats', protect, adminOnly, getTransactionStats);
+router.put('/transactions/:id/status', protect, adminOnly, updateTransactionStatus);
+router.get('/export', protect, adminOnly, exportTransactions);
+
 // Token-based download (no auth required, token acts as auth)
 router.get('/download/:token', getDownloadLink);
 
 // Admin only routes
 router.post('/refund', protect, adminOnly, initiateRefund);
 
+// ============================================
+// TRANSACTION DELETE ROUTES (Admin Only)
+// ============================================
+router.delete(
+    '/transactions/:id',
+    protect, adminOnly,
+    deleteTransaction
+);
+
+// @route   POST /api/payments/admin/transactions/bulk-delete
+// @desc    Bulk delete multiple transactions
+// @access  Private (Admin)
+router.post(
+    '/transactions/bulk-delete',
+    protect, adminOnly,
+    bulkDeleteTransactions
+);
+
+// @route   DELETE /api/payments/admin/transactions/cleanup
+// @desc    Cleanup old failed transactions
+// @access  Private (Admin)
+// @query   ?daysOld=30 (default: 30 days)
+router.delete(
+    '/cleanup',
+    protect, adminOnly,
+    cleanupFailedTransactions
+);
 module.exports = router;
 
 // backend/routes/payments.js
