@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-    title: 'BooksPDF - Free & Premium PDF Books & eBooks Plateform',
+    title: 'BooksnPDF - Free & Premium PDF Books & eBooks Plateform',
     description: 'Download free & thousands of eBooks across programming, business, design, and more. Secure payment via PhonePe.',
-    keywords: 'pdf books, ebooks, online books, digital books, programming books, business books, books pdf',
+    keywords: 'pdf books, ebooks, free pdf book, free pdfs, online books, digital books, programming books, business books, books pdf, Atomic Habits PDF, Best motivation ebooks PDF',
 };
 
 export default function RootLayout({

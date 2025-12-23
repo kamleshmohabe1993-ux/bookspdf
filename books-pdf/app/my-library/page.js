@@ -44,7 +44,6 @@ export default function MyLibraryPage() {
         try {
             const response = await paymentAPI.getMyPurchases();
             setPurchases(response.data.data);
-            console.log("response", response);
         } catch (error) {
             console.error('Error loading purchases:', error);
             showToast.error('Failed to load your library');

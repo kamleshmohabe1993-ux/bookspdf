@@ -40,7 +40,6 @@ export default function ForgotPasswordPage() {
                   });
             localStorage.setItem('token', response.data.token);
             showToast.success('OTP sent to your email!');
-            console.log('OTP Request Response:', response.data);
             setSuccess(response.data.message || 'OTP sent to your email!');
             setStep(2);
             setResendTimer(60); // 60 seconds timer
@@ -65,7 +64,6 @@ export default function ForgotPasswordPage() {
                 email: formData.email
             });
 
-            console.log('Resend OTP Response:', response.data);
             setSuccess('OTP resent successfully!');
             setResendTimer(60);
         } catch (err) {
@@ -94,8 +92,6 @@ export default function ForgotPasswordPage() {
                 email: formData.email,
                 otp: formData.otp
             });
-
-            console.log('OTP Verification Response:', response.data);
             setSuccess('OTP verified successfully!');
             setStep(3);
         } catch (err) {
@@ -134,7 +130,6 @@ export default function ForgotPasswordPage() {
                 confirmPassword: formData.confirmPassword
             });
 
-            console.log('Password Reset Response:', response.data);
             setSuccess('Password reset successfully!');
             setStep(4);
         } catch (err) {

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Book, LogIn } from 'lucide-react';
 import Link from 'next/link';
-
+import showToast from '@/lib/toast';
 export default function LoginPage() {
     const [formData, setFormData] = useState({
         email: '',
@@ -22,9 +22,22 @@ export default function LoginPage() {
         setLoading(true);
 
         const result = await login(formData.email, formData.password);
-
-        if (result.success) {
+        const redirectUrl = localStorage.getItem('redirectAfterLogin');
+        console.log("redirectUrl login", redirectUrl);
+        if (redirectUrl) {
+            // Clear the redirect URL
+            localStorage.removeItem('redirectAfterLogin');
+            
+            // Redirect to saved page
+            console.log('Redirecting to:', redirectUrl);
+            router.push(redirectUrl);
+        } else {
+            // Default redirect
             router.push('/');
+        }
+        if (result.success) {
+            // router.push('/');
+            showToast.success('Login successful!');
         } else {
             setError(result.error);
         }
@@ -37,7 +50,7 @@ export default function LoginPage() {
             <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
                 <div className="flex items-center justify-center mb-6">
                     <Book className="text-blue-600 mr-2" size={40} />
-                    <h1 className="text-3xl font-bold text-gray-800">BooksPDF</h1>
+                    <h1 className="text-3xl font-bold text-gray-800">BooksnPDF</h1>
                 </div>
 
                 <h2 className="text-2xl font-bold text-purple-500 text-center mb-6">Login</h2>
