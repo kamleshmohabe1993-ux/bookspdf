@@ -59,10 +59,6 @@ export default function AdminUsersDashboard() {
     totalPages: 1,
     totalItems: 0
   });
-  
-  // Store the current page URL
-        const currenturl = `/admin/user-dashboard`;
-        localStorage.setItem('redirectAfterLogin', currenturl);
 
   // Bulk Actions
   const [showBulkActions, setShowBulkActions] = useState(false);

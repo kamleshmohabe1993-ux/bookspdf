@@ -29,10 +29,6 @@ export default function TransactionsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
-    // Store the current page URL
-    const currenturl = `/admin/transactions`;
-    localStorage.setItem('redirectAfterLogin', currenturl);
-
     useEffect(() => {
         if (user?.isAdmin) {
             loadTransactions();
