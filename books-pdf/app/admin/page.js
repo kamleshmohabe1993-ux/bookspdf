@@ -30,10 +30,6 @@ export default function AdminPanel() {
     });
     const [editingId, setEditingId] = useState(null);
 
-    // Store the current page URL
-        const currenturl = `/admin`;
-        localStorage.setItem('redirectAfterLogin', currenturl);
-
     useEffect(() => {
         if (!authLoading && (!user || !user.isAdmin)) {
             router.push('/');
@@ -241,7 +237,7 @@ export default function AdminPanel() {
                             onClick={() => router.push('/')}
                             className="hidden md:block px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors"
                             >
-                                Back to Home
+                                Home
                             </button>
                         </div>
                         <div>
@@ -261,7 +257,7 @@ export default function AdminPanel() {
                             }}
                             className="hidden md:block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-yellow-300 items-center gap-3"
                             >
-                                <span>Transections</span>
+                                <span>Trans</span>
                             </button>
                         </div>
                     </div>
@@ -289,6 +285,12 @@ export default function AdminPanel() {
                                 className="md:hidden px-3 py-1 text-sm bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300"
                             >
                                 Trans
+                            </button>
+                            <button
+                                onClick={() => router.push('/admin/user-dashboard')}
+                                className="md:hidden px-3 py-1 text-sm bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300"
+                            >
+                                Urs
                             </button>
                         </div>
                         
