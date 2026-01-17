@@ -22,16 +22,6 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <head>
-                <script async src="https://www.googletagmanager.com/gtag/js?id=G-RM30N6VYM9"></script>
-                <script>
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-
-                gtag('config', 'G-RM30N6VYM9');
-                </script>
-            </head>
             <body className={inter.className}>
                 <AuthProvider>
                     {children}
