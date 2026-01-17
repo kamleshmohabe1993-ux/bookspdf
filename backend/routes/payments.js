@@ -16,15 +16,18 @@ const {
     getTransactionStats,
     updateTransactionStatus,
     exportTransactions,
+    deleteTransaction,
+    cleanupFailedTransactions,
+    bulkDeleteTransactions
 } = require('../controllers/paymentController');
-const {deleteTransaction,cleanupFailedTransactions,bulkDeleteTransactions } = require('../controllers/transactionsController')
+
 // Public routes
 router.post('/callback', paymentCallback); // PhonePe webhook (no auth)
 
 // Protected routes (require authentication)
 router.post('/initiate', protect, initiatePayment);
 router.get('/status/:transactionId', protect, checkPaymentStatus);
-router.post('/free-download/:bookId', protect, freeDownload);
+router.post('/downloadfree/:bookId', protect, freeDownload);
 router.get('/my-purchases', protect, getMyPurchases);
 
 // Admin transaction routes

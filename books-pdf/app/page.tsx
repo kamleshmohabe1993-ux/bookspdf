@@ -613,7 +613,7 @@ export default function Home() {
                         <input
                             type="text"
                             placeholder="Search books by title, author, or description..."
-                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl focus:ring-3 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-lg"
+                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 text-gray-500 rounded-xl focus:ring-3 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-lg"
                             value={searchQuery}
                             onChange={handleSearch}
                         />

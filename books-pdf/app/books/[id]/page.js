@@ -7,6 +7,7 @@ import { Download, ShoppingCart, ArrowLeft, IndianRupee, Star, MessageSquare, Us
 import { bookAPI, paymentAPI } from '@/lib/api';
 import PaymentModal from '@/components/PaymentModal';
 import QRCodeModal from '@/components/QRCodeModal';
+import SocialShareButton from '@/components/ShareCard';
 import DebugPanel from '@/components/DebugPanel';
 import showToast from '@/lib/toast';
 import axios from 'axios';
@@ -294,12 +295,30 @@ export default function BookDetailsPage() {
             setProcessing(false);
         }
     };
+
+    const handleDownloadClick = () => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+
+        if (book.isPaid) {
+            // Show payment modal
+            setShowPaymentModal(true);
+        } else {
+            handleFreeDownload();
+        }
+    };
+
     const handleFreeDownload = async () => {
         try {
             setProcessing(true);
             addFlowStep('Starting Free Download');
 
             const response = await paymentAPI.freeDownload(book._id);
+            // const response = await axios.post(
+            //     `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/payments/downloadfree`, {bookId: book._id}
+            // );
             
             window.open(response.data.data.downloadUrl, '_blank');
             
@@ -427,7 +446,7 @@ export default function BookDetailsPage() {
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
                         <div className="flex flex-col lg:flex-row">
                             {/* Book Image - Responsive */}
-                            <div className="w-full lg:w-1/3 bg-gradient-to-br from-gray-100 to-gray-200 p-6 sm:p-8 flex items-center justify-center">
+                            <div className="w-full lg:w-1/3 bg-linear-to-br from-green-100 to-yellow-200 p-6 sm:p-8 flex items-center justify-center">
                                 <img
                                     src={
                                         book.thumbnail?.data
@@ -522,7 +541,7 @@ export default function BookDetailsPage() {
                                         </span>
                                     </div>
                                 )}
-
+                            {/* <SocialShareButton></SocialShareButton> */}
                                 {/* Description - Responsive */}
                                 <div className="mb-4 sm:mb-6">
                                     <h2 className="text-xl sm:text-2xl text-gray-700 font-semibold mb-2 sm:mb-3">Description</h2>
@@ -531,37 +550,60 @@ export default function BookDetailsPage() {
                                     </p>
                                 </div>
 
-                                {/* Preview - Responsive */}
-                                {book.previewText && (
+                                {/* Language - Responsive */}
+                                {book.language && (
                                     <div className="mb-4 sm:mb-6 bg-gray-50 p-4 sm:p-6 rounded-lg">
-                                        <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Preview</h2>
-                                        <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                                            {book.previewText}
-                                        </p>
+                                        <span className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Language</span>
+                                        <span className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                            {book.language}
+                                        </span>
+                                    </div>
+                                )}
+                                {/* Pages - Responsive */}
+                                {book.pages && (
+                                    <div className="mb-4 sm:mb-6 bg-gray-50 p-4 sm:p-6 rounded-lg">
+                                        <span className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Total Pages</span>
+                                        <span className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                            {book.pages}
+                                        </span>
+                                    </div>
+                                )}
+                                {/* Formate - Responsive */}
+                                { (
+                                    <div className="mb-4 sm:mb-6 text-gray-800 bg-green-100 p-4 sm:p-6 rounded-lg">
+                                        <span className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Book Formate: </span>
+                                        <span className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                            PDF / Ebook
+                                        </span>
+                                    </div>
+                                )}
+                                {/* Genre - Responsive */}
+                                {book.genre && (
+                                    <div className="mb-4 sm:mb-6 bg-green-50 p-4 sm:p-6 rounded-lg">
+                                        <span className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Book Genre: </span>
+                                        <span className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                            {book.genre}
+                                        </span>
                                     </div>
                                 )}
 
                                 {/* Tags - Responsive */}
-                                {book.tags && book.tags.length > 0 && (
-                                    <div className="mb-4 sm:mb-6">
-                                        <h3 className="text-base sm:text-lg text-gray-700 font-semibold mb-2 sm:mb-3">Tags:</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {book.tags.map((tag, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="bg-gray-200 text-gray-700 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
+                                {book.tags?.length > 0 && (
+                                    <div className="sr-only">
+                                        <h3>Tags</h3>
+                                        <ul>
+                                        {book.tags.map((tag, index) => (
+                                            <li key={index}>{tag}</li>
+                                        ))}
+                                        </ul>
                                     </div>
-                                )}
+                                    )}
+
 
                                 {/* MAIN ACTION BUTTON - Responsive */}
                                 <div className="space-y-3">
                                     <button
-                                        onClick={handleMainButtonClick}
+                                        onClick={handleDownloadClick}
                                         disabled={processing}
                                         className={`w-full py-4 sm:py-5 rounded-lg sm:rounded-xl font-bold text-lg sm:text-xl flex items-center justify-center gap-2 sm:gap-3 transition-all shadow-lg ${
                                             processing
@@ -590,12 +632,12 @@ export default function BookDetailsPage() {
                                             </>
                                         )}
                                     </button>
-                                        <div>
-                                            <span className="font-md text-red-700">Note: The Payment Page Under Maintenance!</span>
-                                        </div>
                                     {/* Visual Indicator - Responsive */}
                                     {book.isPaid && !processing && (
                                         <div className="bg-linear-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-3 sm:p-4 text-center">
+                                            <div>
+                                            <span className="font-md text-red-700">Note: The Payment Page Under Maintenance!</span>
+                                            </div>
                                             <p className="text-xs sm:text-sm font-semibold text-purple-900 mb-2">
                                                 💳 Quick & Secure Checkout
                                             </p>

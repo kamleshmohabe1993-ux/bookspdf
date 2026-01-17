@@ -142,7 +142,7 @@ exports.sendOTPEmail = async (email, otp, fullName) => {
                     
                     <div class="footer">
                         <p>This is an automated email, please do not reply.</p>
-                        <p>&copy; 2024 PDF eBooks Marketplace. All rights reserved.</p>
+                        <p>&copy; 2025 BooksnPDF. All rights reserved.</p>
                     </div>
                 </div>
             </body>

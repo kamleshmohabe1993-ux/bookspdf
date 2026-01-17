@@ -115,7 +115,7 @@ const PaymentModal = ({ isOpen, onClose, book, user, onConfirm, loading }) => {
                                 <Calendar className="text-yellow-600 mt-0.5 flex-shrink-0" size={16} />
                                 <div className="min-w-0">
                                     <p className="text-xs text-gray-600">Date</p>
-                                    <p className="font-semibold text-xs sm:text-sm break-words">{formattedDate}</p>
+                                    <p className="font-semibold text-gray-600 text-xs sm:text-sm break-words">{formattedDate}</p>
                                 </div>
                             </div>
                             
@@ -123,7 +123,7 @@ const PaymentModal = ({ isOpen, onClose, book, user, onConfirm, loading }) => {
                                 <Clock className="text-yellow-600 mt-0.5 flex-shrink-0" size={16} />
                                 <div className="min-w-0">
                                     <p className="text-xs text-gray-600">Time</p>
-                                    <p className="font-semibold text-xs sm:text-sm">{formattedTime}</p>
+                                    <p className="font-semibold text-xs text-gray-600 sm:text-sm">{formattedTime}</p>
                                 </div>
                             </div>
                             
@@ -131,7 +131,7 @@ const PaymentModal = ({ isOpen, onClose, book, user, onConfirm, loading }) => {
                                 <CreditCard className="text-yellow-600 mt-0.5 flex-shrink-0" size={16} />
                                 <div className="min-w-0">
                                     <p className="text-xs text-gray-600">Payment Gateway</p>
-                                    <p className="font-semibold text-xs sm:text-sm">PhonePe UPI</p>
+                                    <p className="font-semibold text-xs text-gray-600 sm:text-sm">PhonePe UPI</p>
                                 </div>
                             </div>
                         </div>

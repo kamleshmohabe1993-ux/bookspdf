@@ -87,7 +87,7 @@ export const paymentAPI = {
     initiate: (bookId) => api.post('/payments/initiate', { bookId }),
     
     // Free download
-    freeDownload: (bookId) => api.post('/payments/free-download', { bookId }),
+    freeDownload: (bookId) => api.post(`/payments/downloadfree/${bookId}`),
     
     // Verify payment
     verify: (transactionId) => api.post('/payments/verify', { transactionId }),

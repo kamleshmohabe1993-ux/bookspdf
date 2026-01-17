@@ -299,7 +299,7 @@ export default function MyLibraryPage() {
                                         </div>
 
                                         <div className="w-2/3 p-4">
-                                            <h3 className="text-xl font-bold mb-2">
+                                            <h3 className="text-xl text-gray-800 font-bold mb-2">
                                                 {purchase.book?.title || 'Untitled Book'}
                                             </h3>
                                             {purchase.book?.author && (
