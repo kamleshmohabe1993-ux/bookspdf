@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import showToast from '@/lib/toast';
-export default function RegisterPage() {
+import { X, FileText, CheckCircle, AlertCircle, Shield, Lock, Eye, Download } from 'lucide-react';
+export default function RegisterPage({isOpen, onClose, onAccept, businessName = "BooksnPDF"}) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     mobileNumber:'',
@@ -17,6 +19,32 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
+
+  const handleScroll = (e) => {
+    const element = e.target;
+    const isAtBottom = Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 10;
+    
+    if (isAtBottom && !hasScrolledToBottom) {
+      setHasScrolledToBottom(true);
+    }
+  };
+
+const handleAccept = () => {
+    if (agreedToTerms && agreedToPrivacy && hasScrolledToBottom) {
+      if (typeof onAccept === 'function') {
+        onAccept();
+        onClose();
+      }
+      if (typeof onClose === 'function') {
+        onClose();
+      }
+    }
+  };
+
+  const canAccept = agreedToTerms && agreedToPrivacy && hasScrolledToBottom;
 
   useEffect(() => {
     // Redirect if already logged in
@@ -40,6 +68,7 @@ export default function RegisterPage() {
     }
   };
 
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -48,6 +77,7 @@ export default function RegisterPage() {
     });
     setError('');
 
+    
     if (name === 'password') {
       checkPasswordStrength(value);
     }
@@ -68,8 +98,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.mobileNumber.length < 10 && formData.mobileNumber.length > 11) {
-      setError('Mobile number must be 10 gidits');
+    if (formData.mobileNumber.length >= 10 && formData.mobileNumber.length < 11) {
+      setError('Mobile number must be 10 digits');
       return;
     }
 
@@ -151,7 +181,7 @@ export default function RegisterPage() {
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="username" className="block text-md font-medium text-gray-700 mb-2">
+              <label htmlFor="fullName" className="block text-md font-medium text-gray-700 mb-2">
                 Full Name
               </label>
               <div className="relative">
@@ -196,14 +226,24 @@ export default function RegisterPage() {
               </div>
             </div>
             <div>
-              <label htmlFor="username" className="block text-md font-medium text-gray-700 mb-2">
+              <label htmlFor="mobileNumber" className="block text-md font-medium text-gray-700 mb-2">
                 Mob No.
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                  <svg
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 5a2 2 0 012-2h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 5z"
+                  />
+                </svg>
                 </div>
                 <input
                   type="string"
@@ -281,6 +321,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Checkbox Section */}
             <div className="flex items-center">
               <input
                 id="terms"
@@ -289,11 +330,16 @@ export default function RegisterPage() {
                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 required
               />
+
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the{' '}
-                <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                I agree to the{" "}
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  className="text-indigo-600 hover:text-indigo-500 underline"
+                >
                   Terms and Conditions
-                </a>
+                </button>
               </label>
             </div>
 
@@ -312,7 +358,384 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
-
+          
+          {/* Modal */}
+          {open && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-2xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-white/20 p-3 rounded-lg">
+                            <FileText size={28} />
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-bold">Terms & Conditions</h2>
+                            <p className="text-white/90 text-sm">Please read carefully before proceeding</p>
+                          </div>
+                          <button
+                            onClick={() => setOpen(false)}
+                            className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+                            aria-label="Close"
+                          >
+                            <X size={24} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+            
+                    {/* Scroll Indicator */}
+                    {!hasScrolledToBottom && (
+                      <div className="bg-yellow-50 border-b border-yellow-200 px-6 py-3 flex items-center gap-2">
+                        <AlertCircle size={18} className="text-yellow-600 flex-shrink-0" />
+                        <p className="text-sm text-yellow-800">
+                          Please scroll down to read all terms and conditions
+                        </p>
+                      </div>
+                    )}
+            
+                    {/* Content */}
+                    <div 
+                      className="flex-1 overflow-y-auto p-6 space-y-6"
+                      onScroll={handleScroll}
+                    >
+                      {/* Last Updated */}
+                      <div className="text-sm text-gray-600 italic">
+                        Last Updated: January 24, 2026
+                      </div>
+            
+                      {/* Introduction */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <CheckCircle size={20} className="text-blue-600" />
+                          1. Introduction & Acceptance
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p>
+                            Welcome to {businessName}. By creating an account and using our services, you agree to be bound by these Terms and Conditions.
+                          </p>
+                          <p>
+                            These terms constitute a legally binding agreement between you and {businessName}. If you do not agree to these terms, please do not register or use our services.
+                          </p>
+                        </div>
+                      </section>
+            
+                      {/* User Account */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <Lock size={20} className="text-blue-600" />
+                          2. User Account & Registration
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p className="font-semibold">2.1 Account Creation</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>You must be at least 18 years old to create an account</li>
+                            <li>You must provide accurate and complete information</li>
+                            <li>You are responsible for maintaining the confidentiality of your password</li>
+                            <li>You are responsible for all activities under your account</li>
+                          </ul>
+                          
+                          <p className="font-semibold mt-3">2.2 Account Security</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>Keep your login credentials secure and confidential</li>
+                            <li>Notify us immediately of any unauthorized access</li>
+                            <li>We are not liable for losses due to unauthorized account use</li>
+                          </ul>
+                        </div>
+                      </section>
+            
+                      {/* Content & Licenses */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <Download size={20} className="text-blue-600" />
+                          3. Digital Content & Licenses
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p className="font-semibold">3.1 Content Access</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>All eBooks and digital content are licensed, not sold</li>
+                            <li>You receive a non-exclusive, non-transferable license to use the content</li>
+                            <li>Content is for personal, non-commercial use only</li>
+                          </ul>
+                          
+                          <p className="font-semibold mt-3">3.2 Restrictions</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>Do not copy, distribute, or share purchased content</li>
+                            <li>Do not resell or commercially exploit any content</li>
+                            <li>Do not remove copyright or watermarks from content</li>
+                            <li>Do not use content for AI training or data scraping</li>
+                          </ul>
+                          
+                          <p className="font-semibold mt-3">3.3 Download Limits</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>Each purchase allows a limited number of downloads (typically 3-5)</li>
+                            <li>Downloads expire after 30 days from purchase date</li>
+                            <li>Contact support for re-download requests after expiry</li>
+                          </ul>
+                        </div>
+                      </section>
+            
+                      {/* Payments & Refunds */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <Shield size={20} className="text-blue-600" />
+                          4. Payments, Pricing & Refunds
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p className="font-semibold">4.1 Pricing</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>All prices are in Indian Rupees (INR) unless stated otherwise</li>
+                            <li>Prices may change without notice</li>
+                            <li>Your payment amount is locked at checkout</li>
+                          </ul>
+                          
+                          <p className="font-semibold mt-3">4.2 Payment Processing</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>We use PhonePe and other secure payment gateways</li>
+                            <li>Your payment information is processed securely</li>
+                            <li>We do not store credit card information</li>
+                          </ul>
+                          
+                          <p className="font-semibold mt-3">4.3 Refund Policy</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>Digital products are generally non-refundable after download</li>
+                            <li>Refunds may be issued for technical issues preventing access</li>
+                            <li>Refund requests must be made within 7 days of purchase</li>
+                            <li>Refunds are processed within 7-10 business days</li>
+                          </ul>
+                        </div>
+                      </section>
+            
+                      {/* Privacy & Data */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <Eye size={20} className="text-blue-600" />
+                          5. Privacy & Data Protection
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p className="font-semibold">5.1 Information Collection</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>We collect personal information you provide during registration</li>
+                            <li>We collect usage data to improve our services</li>
+                            <li>Payment information is handled by our payment processors</li>
+                          </ul>
+                          
+                          <p className="font-semibold mt-3">5.2 Data Usage</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>Your data is used to provide and improve our services</li>
+                            <li>We may send promotional emails (you can unsubscribe anytime)</li>
+                            <li>We will never sell your personal information to third parties</li>
+                          </ul>
+                          
+                          <p className="font-semibold mt-3">5.3 Data Security</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>We use industry-standard encryption and security measures</li>
+                            <li>We cannot guarantee 100% security of data transmission</li>
+                            <li>You are responsible for maintaining your password security</li>
+                          </ul>
+                        </div>
+                      </section>
+            
+                      {/* Prohibited Activities */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <AlertCircle size={20} className="text-red-600" />
+                          6. Prohibited Activities
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p>You agree NOT to:</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>Violate any laws or regulations</li>
+                            <li>Infringe on intellectual property rights</li>
+                            <li>Share or distribute copyrighted content</li>
+                            <li>Attempt to hack, breach, or compromise our systems</li>
+                            <li>Use automated systems (bots, scrapers) on our platform</li>
+                            <li>Create multiple accounts to abuse promotions</li>
+                            <li>Engage in fraudulent payment activities</li>
+                            <li>Harass or abuse other users or our staff</li>
+                          </ul>
+                        </div>
+                      </section>
+            
+                      {/* Intellectual Property */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          7. Intellectual Property Rights
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p>
+                            All content, including but not limited to eBooks, images, logos, text, and software, is protected by copyright and other intellectual property laws.
+                          </p>
+                          <p>
+                            The {businessName} trademark, logo, and all related marks are our property. You may not use them without written permission.
+                          </p>
+                        </div>
+                      </section>
+            
+                      {/* Termination */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          8. Account Termination
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p className="font-semibold">8.1 By You</p>
+                          <p>You may close your account at any time by contacting our support team.</p>
+                          
+                          <p className="font-semibold mt-3">8.2 By Us</p>
+                          <p>We reserve the right to suspend or terminate accounts that:</p>
+                          <ul className="list-disc ml-5 space-y-1">
+                            <li>Violate these Terms and Conditions</li>
+                            <li>Engage in fraudulent activities</li>
+                            <li>Abuse our refund policy</li>
+                            <li>Distribute copyrighted content illegally</li>
+                          </ul>
+                        </div>
+                      </section>
+            
+                      {/* Limitation of Liability */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          9. Limitation of Liability
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p>
+                            To the maximum extent permitted by law, {businessName} shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our services.
+                          </p>
+                          <p>
+                            Our total liability to you for any claims shall not exceed the amount you paid to us in the 12 months preceding the claim.
+                          </p>
+                        </div>
+                      </section>
+            
+                      {/* Changes to Terms */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          10. Changes to Terms
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p>
+                            We reserve the right to modify these Terms and Conditions at any time. Changes will be effective immediately upon posting.
+                          </p>
+                          <p>
+                            Continued use of our services after changes constitutes acceptance of the modified terms.
+                          </p>
+                          <p>
+                            We will notify users of significant changes via email or platform notification.
+                          </p>
+                        </div>
+                      </section>
+            
+                      {/* Governing Law */}
+                      <section>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          11. Governing Law & Jurisdiction
+                        </h3>
+                        <div className="text-gray-700 space-y-2 ml-7">
+                          <p>
+                            These Terms and Conditions are governed by the laws of India.
+                          </p>
+                          <p>
+                            Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts in [Your City], India.
+                          </p>
+                        </div>
+                      </section>
+            
+                      {/* Contact */}
+                      <section className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          12. Contact Information
+                        </h3>
+                        <div className="text-gray-700 space-y-2">
+                          <p>For questions about these Terms and Conditions, please contact us:</p>
+                          <ul className="space-y-1">
+                            <li>📧 Email: contact@booksnpdf.com</li>
+                            <li>📞 Phone: +91 7999742458</li>
+                          </ul>
+                        </div>
+                      </section>
+            
+                      {/* Scroll to bottom indicator */}
+                      {!hasScrolledToBottom && (
+                        <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-4 text-center">
+                          <div className="animate-bounce text-blue-600">
+                            <p className="text-sm font-semibold">↓ Scroll down to continue ↓</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+            
+                    {/* Footer - Checkboxes & Accept */}
+                    <div className="border-t border-gray-200 p-6 bg-gray-50 rounded-b-2xl">
+                      {/* Checkboxes */}
+                      <div className="space-y-3 mb-4">
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={agreedToTerms}
+                            onChange={(e) => setAgreedToTerms(e.target.checked)}
+                            disabled={!hasScrolledToBottom}
+                            className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className={`text-sm ${hasScrolledToBottom ? 'text-gray-900' : 'text-gray-400'}`}>
+                            I have read and agree to the <strong>Terms and Conditions</strong>
+                          </span>
+                        </label>
+            
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={agreedToPrivacy}
+                            onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                            disabled={!hasScrolledToBottom}
+                            className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className={`text-sm ${hasScrolledToBottom ? 'text-gray-900' : 'text-gray-400'}`}>
+                            I acknowledge the <strong>Privacy Policy</strong> and consent to data collection as described
+                          </span>
+                        </label>
+                      </div>
+            
+                      {/* Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          onClick={() => setOpen(false)}
+                          className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                        >
+                          Close
+                        </button>
+                        <button
+                          onClick={() => setOpen(false)}
+                          disabled={!canAccept}
+                          className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+                            canAccept
+                              ? 'bg-linear-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {canAccept ? (
+                            <>
+                              <CheckCircle size={20} />
+                              Accept & Continue
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle size={20} />
+                              Read & Check All
+                            </>
+                          )}
+                        </button>
+                      </div>
+            
+                      {!hasScrolledToBottom && (
+                        <p className="text-xs text-center text-gray-500 mt-3">
+                          Please scroll to the bottom to enable acceptance
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+          )}
           {/* Divider */}
           <div className="mt-6">
             <div className="relative">
