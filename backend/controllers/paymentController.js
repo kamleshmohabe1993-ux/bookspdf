@@ -34,8 +34,8 @@ exports.initiatePayment = async (req, res) => {
 
         // Check existing purchase
         const existingPurchase = await Payment.findOne({
-            user,
-            book,
+            userId,
+            bookId,
             status: 'SUCCESS'
         });
 
@@ -56,8 +56,8 @@ exports.initiatePayment = async (req, res) => {
 
         // Create payment record
         const payment = new Payment({
-            user,
-            book,
+            userId,
+            bookId,
             merchantOrderId,
             amount: amountInPaise,
             status: 'INITIATED',
@@ -138,7 +138,7 @@ exports.verifyPayment = async (req, res) => {
         // Find payment record
         const payment = await Payment.findOne({
             merchantOrderId,
-            user
+            userId
         }).populate('bookId', 'title price downloadUrl');
 
         if (!payment) {
@@ -224,7 +224,7 @@ exports.getPaymentHistory = async (req, res) => {
         }
 
         const payments = await Payment.find(query)
-            .populate('book', 'title coverImage price')
+            .populate('bookId', 'title coverImage price')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
@@ -263,7 +263,7 @@ exports.initiateRefund = async (req, res) => {
 
         const payment = await Payment.findOne({
             merchantOrderId,
-            user
+            userId
         });
 
         if (!payment) {
