@@ -1,23 +1,27 @@
-const { phonePeClient } = require('../config/phonepe');
+const { phonePeV2Client } = require('../config/phonepe');
 const crypto = require('crypto');
 const Purchase = require('../models/Purchase');
 const Book = require('../models/Book');
+const Payment = require('../models/Payment');
 
-// @route   POST /api/payments/initiate
-// @desc    Initiate PhonePe payment
+const generateOrderId = () => {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    return `ORDER${timestamp}${random}`;
+};
+
+
 exports.initiatePayment = async (req, res) => {
     try {
         const { bookId } = req.body;
         const userId = req.user._id;
 
-        console.log('💳 Payment initiation request:', { bookId, userId });
-
         // Validate book
         const book = await Book.findById(bookId);
         if (!book) {
-            return res.status(404).json({
-                success: false,
-                error: 'Book not found'
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Book not found' 
             });
         }
 
@@ -28,98 +32,319 @@ exports.initiatePayment = async (req, res) => {
             });
         }
 
-        // Check if already purchased
-        const existingPurchase = await Purchase.findOne({
-            user: userId,
-            book: bookId,
-            paymentStatus: 'COMPLETED'
+        // Check existing purchase
+        const existingPurchase = await Payment.findOne({
+            user,
+            book,
+            status: 'SUCCESS'
         });
 
         if (existingPurchase) {
-            return res.status(400).json({
-                success: false,
-                error: 'You have already purchased this book',
+            return res.status(400).json({ 
+                success: false, 
+                message: 'You have already purchased this book',
                 data: {
                     downloadToken: existingPurchase.downloadToken,
-                    transactionId: existingPurchase.transactionId
+                    transactionId: existingPurchase.merchantOrderId
+                } 
+            });
+        }
+
+        // const user = await user.findById(userId);
+        const merchantOrderId = generateOrderId();
+        const amountInPaise = Math.round(book.price * 100);
+
+        // Create payment record
+        const payment = new Payment({
+            user,
+            book,
+            merchantOrderId,
+            amount: amountInPaise,
+            status: 'INITIATED',
+            userMobile: req.user.mobileNumber,
+            userEmail: req.user.email
+        });
+
+        await payment.save();
+
+        // V2 Payment Data
+        const paymentData = {
+            merchantOrderId: merchantOrderId,
+            amount: amountInPaise,
+            redirectUrl: `${process.env.FRONTEND_URL}/payment/callback?orderId=${merchantOrderId}`,
+            message: `Payment for ${book.title}`,
+            expireAfter: 1800, // 30 minutes
+            metaInfo: {
+                udf1: userId.toString(),
+                udf2: bookId.toString(),
+                udf3: book.title
+            }
+        };
+
+        // Create payment with PhonePe V2
+        const phonePeResponse = await phonePeV2Client.createPayment(paymentData);
+
+        if (!phonePeResponse.success) {
+            payment.status = 'FAILED';
+            payment.errorMessage = 'Payment creation failed';
+            await payment.save();
+
+            return res.status(400).json({
+                success: false,
+                message: 'Failed to initiate payment'
+            });
+        }
+
+        // Update payment record
+        payment.phonePeOrderId = phonePeResponse.orderId;
+        payment.status = 'PENDING';
+        payment.paymentState = phonePeResponse.state;
+        payment.expireAt = new Date(phonePeResponse.expireAt);
+        payment.redirectUrl = phonePeResponse.redirectUrl;
+        await payment.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Payment initiated successfully',
+            data: {
+                paymentUrl: phonePeResponse.redirectUrl,
+                merchantOrderId,
+                orderId: phonePeResponse.orderId,
+                amount: book.price,
+                bookTitle: book.title,
+                expireAt: phonePeResponse.expireAt
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Payment initiation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to initiate payment',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Verify Payment - V2
+ * GET /api/payments/v2/verify/:merchantOrderId
+ */
+exports.verifyPayment = async (req, res) => {
+    try {
+        const { merchantOrderId } = req.params;
+        const userId = req.user.id;
+
+        // Find payment record
+        const payment = await Payment.findOne({
+            merchantOrderId,
+            user
+        }).populate('bookId', 'title price downloadUrl');
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Payment not found'
+            });
+        }
+
+        // If already successful
+        if (payment.status === 'SUCCESS') {
+            return res.status(200).json({
+                success: true,
+                message: 'Payment already verified',
+                data: {
+                    status: 'SUCCESS',
+                    merchantOrderId: payment.merchantOrderId,
+                    amount: payment.amount / 100,
+                    book: payment.book,
+                    completedAt: payment.completedAt
                 }
             });
         }
 
-        // Generate unique transaction ID
-        const merchantTransactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
-        const amount = Math.round(book.price * 100); // Convert to paise
+        // Check with PhonePe V2
+        const phonePeStatus = await phonePeV2Client.checkOrderStatus(merchantOrderId);
 
-        console.log('📦 Creating purchase record...');
+        // Update payment
+        payment.paymentState = phonePeStatus.state;
+        payment.paymentInstrument = phonePeStatus.paymentInstrument;
 
-        // Create purchase record - FIXED: Use correct enum value
-        const purchase = await Purchase.create({
-            user: userId,
-            book: bookId,
-            transactionId: merchantTransactionId,
-            amount: book.price,
-            paymentStatus: 'PENDING',
-            paymentGateway: 'PhonePe' // Changed from 'phonepe' to match enum
-        });
+        if (phonePeStatus.paymentStatus === 'SUCCESS') {
+            payment.status = 'SUCCESS';
+            payment.completedAt = new Date();
 
-        console.log('✅ Purchase record created:', purchase._id);
+            // Add book to user's library
+            await User.findByIdAndUpdate(userId, {
+                $addToSet: { purchasedBooks: payment.book }
+            });
 
-        // Prepare payment data
-        const paymentData = {
-            transactionId: merchantTransactionId,
-            userId: `USER${userId}`,
-            amount: amount,
-            callbackUrl: process.env.PHONEPE_CALLBACK_URL,
-            redirectUrl: `${process.env.PHONEPE_REDIRECT_URL}?txnId=${merchantTransactionId}`,
-            redirectMode: 'POST',
-            mobileNumber: req.user.mobileNumber
-        };
-
-        console.log('🔄 Calling PhonePe SDK...');
-        console.log('Payment data:', JSON.stringify(paymentData, null, 2));
-
-        // Check if phonePeClient has initiatePayment method
-        if (typeof phonePeClient.initiatePayment !== 'function') {
-            console.error('❌ phonePeClient.initiatePayment is not a function!');
-            console.error('Available methods:', Object.keys(phonePeClient));
-            throw new Error('PhonePe SDK not properly initialized');
+        } else if (phonePeStatus.paymentStatus === 'FAILED') {
+            payment.status = 'FAILED';
         }
 
-        // Initiate payment
-        const paymentResponse = await phonePeClient.initiatePayment(paymentData);
+        await payment.save();
 
-        console.log('✅ PhonePe response received:', paymentResponse);
+        res.status(200).json({
+            success: true,
+            message: 'Payment status retrieved',
+            data: {
+                status: payment.status,
+                merchantOrderId: payment.merchantOrderId,
+                orderId: payment.phonePeOrderId,
+                amount: payment.amount / 100,
+                paymentInstrument: payment.paymentInstrument,
+                book: payment.book,
+                completedAt: payment.completedAt
+            }
+        });
 
-        if (paymentResponse.success) {
-            console.log('✅ Payment initiated successfully');
-            
-            return res.json({
+    } catch (error) {
+        console.error('❌ Payment verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to verify payment',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Get Payment History
+ * GET /api/payments/v2/history
+ */
+exports.getPaymentHistory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { page = 1, limit = 10, status } = req.query;
+
+        const query = { userId };
+        if (status) {
+            query.status = status.toUpperCase();
+        }
+
+        const payments = await Payment.find(query)
+            .populate('book', 'title coverImage price')
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const count = await Payment.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                payments,
+                totalPages: Math.ceil(count / limit),
+                currentPage: page,
+                total: count
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Get payment history error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get payment history',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Initiate Refund - V2
+ * POST /api/payments/v2/refund/:merchantOrderId
+ */
+exports.initiateRefund = async (req, res) => {
+    try {
+        const { merchantOrderId } = req.params;
+        const { reason } = req.body;
+        const userId = req.user.id;
+
+        const payment = await Payment.findOne({
+            merchantOrderId,
+            user
+        });
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Payment not found'
+            });
+        }
+
+        if (payment.status !== 'SUCCESS') {
+            return res.status(400).json({
+                success: false,
+                message: 'Only successful payments can be refunded'
+            });
+        }
+
+        if (payment.status === 'REFUNDED') {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment already refunded'
+            });
+        }
+
+        // Check 7-day refund policy
+        const daysSince = Math.floor(
+            (Date.now() - payment.completedAt) / (1000 * 60 * 60 * 24)
+        );
+
+        if (daysSince > 7) {
+            return res.status(400).json({
+                success: false,
+                message: 'Refund period has expired (7 days)'
+            });
+        }
+
+        const merchantRefundId = `REFUND${Date.now()}`;
+
+        const refundData = {
+            merchantRefundId,
+            originalOrderId: payment.phonePeOrderId,
+            amount: payment.amount,
+            reason: reason || 'Customer requested refund'
+        };
+
+        const refundResponse = await phonePeV2Client.initiateRefund(refundData);
+
+        if (refundResponse.success) {
+            payment.status = 'REFUNDED';
+            payment.refundId = refundResponse.refundId;
+            payment.refundAmount = payment.amount;
+            payment.refundReason = reason;
+            payment.refundedAt = new Date();
+
+            await User.findByIdAndUpdate(userId, {
+                $pull: { purchasedBooks: payment.bookId }
+            });
+
+            await payment.save();
+
+            res.status(200).json({
                 success: true,
+                message: 'Refund initiated successfully',
                 data: {
-                    paymentUrl: paymentResponse.data.instrumentResponse.redirectInfo.url,
-                    transactionId: merchantTransactionId,
-                    merchantId: process.env.PHONEPE_MERCHANT_ID
+                    refundId: refundResponse.refundId,
+                    merchantRefundId,
+                    amount: payment.amount / 100
                 }
             });
         } else {
-            console.error('❌ Payment initiation failed:', paymentResponse);
-            
-            await purchase.updateOne({ paymentStatus: 'FAILED' });
-            
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
-                error: paymentResponse.message || 'Payment initiation failed'
+                message: 'Refund initiation failed'
             });
         }
 
     } catch (error) {
-        console.error('💥 Payment initiation error:', error);
-        console.error('Error stack:', error.stack);
-        
+        console.error('❌ Refund error:', error);
         res.status(500).json({
             success: false,
-            error: 'Payment initiation failed: ' + error.message,
-            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            message: 'Failed to initiate refund',
+            error: error.message
         });
     }
 };
@@ -144,7 +369,7 @@ exports.paymentCallback = async (req, res) => {
         }
 
         // Verify webhook using SDK
-        const verification = phonePeClient.verifyWebhook(response, xVerifyHeader);
+        const verification = phonePeV2Client.verifyWebhook(response, xVerifyHeader);
 
         if (!verification.valid) {
             console.error('❌ Webhook verification failed:', verification.error);
@@ -160,7 +385,7 @@ exports.paymentCallback = async (req, res) => {
         const { transactionId, code } = decodedData;
 
         // Find purchase
-        const purchase = await Purchase.findOne({ transactionId });
+        const purchase = await Payment.findOne({ transactionId });
 
         if (!purchase) {
             console.error('❌ Purchase not found:', transactionId);
@@ -575,19 +800,19 @@ exports.getAllTransactions = async (req, res) => {
 
         // Filter by status if provided
         if (status && status !== 'all') {
-            query.paymentStatus = status;
+            query.status = status;
         }
 
         // Search functionality (optional)
         if (search) {
             // This would require text indexes on the Purchase model
             query.$or = [
-                { transactionId: { $regex: search, $options: 'i' } }
+                { phonePeOrderId: { $regex: search, $options: 'i' } }
             ];
         }
 
         // Fetch all transactions with populated user and book details
-        const transactions = await Purchase.find(query)
+        const transactions = await Payment.find(query)
             .populate('user', 'fullName email mobileNumber') // Populate user details
             .populate('book', 'title author thumbnail price category') // Populate book details
             .sort({ purchasedAt: -1 }) // Sort by most recent first
@@ -596,10 +821,10 @@ exports.getAllTransactions = async (req, res) => {
         // Calculate statistics
         const stats = {
             total: transactions.length,
-            completed: transactions.filter(t => t.paymentStatus === 'COMPLETED').length,
-            pending: transactions.filter(t => t.paymentStatus === 'PENDING').length,
-            failed: transactions.filter(t => t.paymentStatus === 'FAILED').length,
-            refunded: transactions.filter(t => t.paymentStatus === 'REFUNDED').length,
+            completed: transactions.filter(t => t.status === 'COMPLETED').length,
+            pending: transactions.filter(t => t.status === 'PENDING').length,
+            failed: transactions.filter(t => t.status === 'FAILED').length,
+            refunded: transactions.filter(t => t.status === 'REFUNDED').length,
             totalRevenue: transactions
                 .filter(t => t.paymentStatus === 'COMPLETED')
                 .reduce((sum, t) => sum + (t.amount || 0), 0)
@@ -633,7 +858,7 @@ exports.getTransactionById = async (req, res) => {
             });
         }
 
-        const transaction = await Purchase.findById(req.params.id)
+        const transaction = await Payment.findById(req.params.id)
             .populate('user', 'fullName email mobileNumber')
             .populate('book', 'title author thumbnail price category');
 
@@ -681,34 +906,34 @@ exports.getTransactionStats = async (req, res) => {
         }
 
         // Get all transactions
-        const transactions = await Purchase.find(dateFilter);
+        const transactions = await Payment.find(dateFilter);
 
         // Calculate detailed statistics
         const stats = {
             overview: {
                 total: transactions.length,
-                completed: transactions.filter(t => t.paymentStatus === 'COMPLETED').length,
-                pending: transactions.filter(t => t.paymentStatus === 'PENDING').length,
-                failed: transactions.filter(t => t.paymentStatus === 'FAILED').length,
-                refunded: transactions.filter(t => t.paymentStatus === 'REFUNDED').length
+                completed: transactions.filter(t => t.status === 'COMPLETED').length,
+                pending: transactions.filter(t => t.status === 'PENDING').length,
+                failed: transactions.filter(t => t.status === 'FAILED').length,
+                refunded: transactions.filter(t => t.status === 'REFUNDED').length
             },
             revenue: {
                 total: transactions
-                    .filter(t => t.paymentStatus === 'COMPLETED')
+                    .filter(t => t.status === 'COMPLETED')
                     .reduce((sum, t) => sum + t.amount, 0),
                 refunded: transactions
-                    .filter(t => t.paymentStatus === 'REFUNDED')
+                    .filter(t => t.status === 'REFUNDED')
                     .reduce((sum, t) => sum + t.amount, 0),
                 pending: transactions
-                    .filter(t => t.paymentStatus === 'PENDING')
+                    .filter(t => t.status === 'PENDING')
                     .reduce((sum, t) => sum + t.amount, 0)
             },
             paymentGateways: {
-                PhonePe: transactions.filter(t => t.paymentGateway === 'PhonePe').length,
-                Free: transactions.filter(t => t.paymentGateway === 'Free').length,
-                Razorpay: transactions.filter(t => t.paymentGateway === 'Razorpay').length
+                PhonePe: transactions.filter(t => t.status === 'PhonePe').length,
+                Free: transactions.filter(t => t.status === 'Free').length,
+                Razorpay: transactions.filter(t => t.status === 'Razorpay').length
             },
-            recentTransactions: await Purchase.find(dateFilter)
+            recentTransactions: await Payment.find(dateFilter)
                 .sort({ purchasedAt: -1 })
                 .limit(5)
                 .populate('user', 'fullName')
@@ -751,7 +976,7 @@ exports.updateTransactionStatus = async (req, res) => {
             });
         }
 
-        const transaction = await Purchase.findById(req.params.id);
+        const transaction = await Payment.findById(req.params.id);
 
         if (!transaction) {
             return res.status(404).json({
@@ -761,7 +986,7 @@ exports.updateTransactionStatus = async (req, res) => {
         }
 
         // Update status
-        transaction.paymentStatus = status;
+        transaction.status = status;
         
         // Add admin note if provided
         if (note) {
@@ -809,7 +1034,7 @@ exports.exportTransactions = async (req, res) => {
         // Build query
         let query = {};
         if (status && status !== 'all') {
-            query.paymentStatus = status;
+            query.status = status;
         }
         if (startDate || endDate) {
             query.purchasedAt = {};
@@ -817,7 +1042,7 @@ exports.exportTransactions = async (req, res) => {
             if (endDate) query.purchasedAt.$lte = new Date(endDate);
         }
 
-        const transactions = await Purchase.find(query)
+        const transactions = await Payment.find(query)
             .populate('user', 'fullName email')
             .populate('book', 'title')
             .sort({ purchasedAt: -1 });

@@ -889,7 +889,7 @@ export default function BookDetailsPage() {
             )}
 
             {/* Debug Panel */}
-            <DebugPanel flowSteps={flowSteps} />
+            {/* <DebugPanel flowSteps={flowSteps} /> */}
         </>
     );
 }

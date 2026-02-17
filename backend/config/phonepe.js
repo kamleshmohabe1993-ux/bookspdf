@@ -1,42 +1,42 @@
-const PhonePeSDK = require('../utils/phonepeSDK');
+const PhonePeV2SDK = require('../utils/phonepeSDK');
 const dotenv = require('dotenv');
+
+// Load environment variables
 dotenv.config();
-// Initialize PhonePe Client
-const phonePeClient = new PhonePeSDK({
-    merchantId: process.env.PHONEPE_MERCHANT_ID,
-    saltKey: process.env.PHONEPE_SALT_KEY,
-    saltIndex: parseInt(process.env.PHONEPE_SALT_INDEX),
-    env: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'UAT'
-});
 
-// Verify Configuration
+
+let phonePeV2Client = null;
+
+try {
+    phonePeV2Client = new PhonePeV2SDK({
+        clientId: process.env.PHONEPE_CLIENT_ID,
+        clientSecret: process.env.PHONEPE_CLIENT_SECRET,
+        clientVersion: process.env.PHONEPE_CLIENT_VERSION || '1',
+        env: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'SANDBOX',
+        verbose: process.env.NODE_ENV !== 'production'
+    });
+
+    console.log('✅ PhonePe V2 SDK initialized');
+    console.log(`📱 Environment: ${process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'SANDBOX'}`);
+    console.log(`🆔 Client ID: ${process.env.PHONEPE_CLIENT_ID}`);
+
+} catch (error) {
+    console.error('❌ Failed to initialize PhonePe V2 SDK:', error.message);
+    if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+    }
+}
+
 const verifyPhonePeConfig = () => {
-    const requiredEnvVars = [
-        'PHONEPE_MERCHANT_ID',
-        'PHONEPE_SALT_KEY',
-        'PHONEPE_SALT_INDEX'
-    ];
-
-    const missingVars = requiredEnvVars.filter(
-        varName => !process.env[varName]
-    );
-
-    if (missingVars.length > 0) {
-        console.error('❌ Missing PhonePe configuration:', missingVars.join(', '));
+    if (!phonePeV2Client) {
+        console.error('❌ PhonePe V2 client not initialized');
         return false;
     }
-
-    console.log('✅ PhonePe configuration verified');
-    console.log(`📱 Environment: ${process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'UAT (Test)'}`);
-    console.log(`🏪 Merchant ID: ${process.env.PHONEPE_MERCHANT_ID}`);
-    
-    // Test that phonePeClient has the method
-    console.log('🔍 Available methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(phonePeClient)));
-    
+    console.log('✅ PhonePe V2 configuration verified');
     return true;
 };
 
 module.exports = {
-    phonePeClient,
+    phonePeV2Client,
     verifyPhonePeConfig
 };

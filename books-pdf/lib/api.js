@@ -88,6 +88,7 @@ export const paymentAPI = {
     
     // Free download
     freeDownload: (bookId) => api.post(`/payments/downloadfree/${bookId}`),
+    getDownloadLink: (token) => api.get(`/payments/download/${token}`),
     
     // Verify payment
     verify: (transactionId) => api.post('/payments/verify', { transactionId }),
@@ -103,17 +104,6 @@ export const paymentAPI = {
     bulkDeleteTransactions: (data) => api.delete('/payments/cleanup', data),
 };
 
-// Orders API
-export const orderAPI = {
-    // Create order
-    create: (data) => api.post('/orders', data),
-    
-    // Get user's orders
-    getMyOrders: () => api.get('/orders/my-orders'),
-    
-    // Get order by ID
-    getById: (id) => api.get(`/orders/${id}`)
-};
 
 // Admin API
 export const adminAPI = {

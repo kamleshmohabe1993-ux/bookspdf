@@ -51,13 +51,13 @@ export default function TransactionsPage() {
         }
     };
 
-    const handleDeleteTransaction = async (transactionId, forceDelete = false) => {
+    const handleDeleteTransaction = async (merchantOrderId, forceDelete = false) => {
         try {
             setActionLoading(true);
             
             const url = forceDelete 
-                ? `/payments/transactions/${transactionId}?force=true`
-                : `/payments/transactions/${transactionId}`;
+                ? `/payments/transactions/${merchantOrderId}?force=true`
+                : `/payments/transactions/${merchantOrderId}`;
 
             const response = await api.delete(url);
 
@@ -77,7 +77,7 @@ export default function TransactionsPage() {
                 );
                 
                 if (confirmed) {
-                    await handleDeleteTransaction(transactionId, true);
+                    await handleDeleteTransaction(merchantOrderId, true);
                 }
             }
         } catch (error) {
@@ -96,7 +96,7 @@ export default function TransactionsPage() {
                 );
                 
                 if (confirmed) {
-                    await handleDeleteTransaction(transactionId, true);
+                    await handleDeleteTransaction(merchantOrderId, true);
                 }
             }
         } finally {
@@ -164,11 +164,11 @@ export default function TransactionsPage() {
         }
     };
 
-    const toggleSelectTransaction = (transactionId) => {
+    const toggleSelectTransaction = (merchantOrderId) => {
         setSelectedTransactions(prev => 
-            prev.includes(transactionId)
-                ? prev.filter(id => id !== transactionId)
-                : [...prev, transactionId]
+            prev.includes(merchantOrderId)
+                ? prev.filter(id => id !== merchantOrderId)
+                : [...prev, merchantOrderId]
         );
     };
 
@@ -191,7 +191,7 @@ export default function TransactionsPage() {
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(txn => 
-                txn.transactionId?.toLowerCase().includes(query) ||
+                txn.merchantOrderId?.toLowerCase().includes(query) ||
                 txn.user?.fullName?.toLowerCase().includes(query) ||
                 txn.book?.title?.toLowerCase().includes(query)
             );
@@ -466,7 +466,7 @@ export default function TransactionsPage() {
                                                 />
                                             </td>
                                             <td className="px-6 py-4 text-sm font-mono text-gray-900">
-                                                {txn.transactionId}
+                                                {txn.merchantOrderId}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 <div>
@@ -593,7 +593,7 @@ export default function TransactionsPage() {
                                 <div className="space-y-2">
                                     <div>
                                         <p className="text-xs text-gray-500">Transaction ID</p>
-                                        <p className="text-sm font-mono text-gray-900 break-all">{txn.transactionId}</p>
+                                        <p className="text-sm font-mono text-gray-900 break-all">{txn.merchantOrderId}</p>
                                     </div>
                                     
                                     <div className="grid grid-cols-2 gap-2">
@@ -771,7 +771,7 @@ export default function TransactionsPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-sm text-gray-800 mb-1">Transaction ID</p>
-                                    <p className="font-mono text-sm text-gray-700 font-medium">{selectedTransaction.transactionId}</p>
+                                    <p className="font-mono text-sm text-gray-700 font-medium">{selectedTransaction.merchantOrderId}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Status</p>

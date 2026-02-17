@@ -5,6 +5,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 // Import all controller functions
 const {
     initiatePayment,
+    getPaymentHistory,
     paymentCallback,
     checkPaymentStatus,
     initiateRefund,
@@ -30,6 +31,10 @@ router.get('/status/:transactionId', protect, checkPaymentStatus);
 router.post('/downloadfree/:bookId', protect, freeDownload);
 router.get('/my-purchases', protect, getMyPurchases);
 
+router.get('/verify/:merchantOrderId', protect, checkPaymentStatus);
+router.get('/history', protect, getPaymentHistory);
+router.post('/refund/:merchantOrderId', adminOnly, initiateRefund);
+
 // Admin transaction routes
 router.get('/transactions', protect, adminOnly, getAllTransactions);
 router.get('/transactions/:id', protect, adminOnly, getTransactionById);
@@ -41,7 +46,7 @@ router.get('/export', protect, adminOnly, exportTransactions);
 router.get('/download/:token', getDownloadLink);
 
 // Admin only routes
-router.post('/refund', protect, adminOnly, initiateRefund);
+// router.post('/refund', protect, adminOnly, initiateRefund);
 
 // ============================================
 // TRANSACTION DELETE ROUTES (Admin Only)
