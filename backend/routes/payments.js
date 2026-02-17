@@ -6,8 +6,9 @@ const { protect, adminOnly } = require('../middleware/auth');
 const {
     initiatePayment,
     getPaymentHistory,
-    paymentCallback,
-    checkPaymentStatus,
+    handleWebhook,
+    handleRedirectCallback,
+    getPaymentStatus,
     initiateRefund,
     getDownloadLink,
     freeDownload,
@@ -23,15 +24,22 @@ const {
 } = require('../controllers/paymentController');
 
 // Public routes
-router.post('/callback', paymentCallback); // PhonePe webhook (no auth)
+router.post('/webhook', handleWebhook); // PhonePe webhook (no auth)
+
+// UI Redirect: Browser redirect after payment (no auth middleware)
+router.get('/redirect-callback', handleRedirectCallback);
+
+// Status polling: Called by frontend (requires auth)
+router.get('/status/:merchantOrderId', protect, getPaymentStatus);
+
 
 // Protected routes (require authentication)
 router.post('/initiate', protect, initiatePayment);
-router.get('/status/:transactionId', protect, checkPaymentStatus);
+// router.get('/status/:transactionId', protect, checkPaymentStatus);
 router.post('/downloadfree/:bookId', protect, freeDownload);
 router.get('/my-purchases', protect, getMyPurchases);
 
-router.get('/verify/:merchantOrderId', protect, checkPaymentStatus);
+// router.get('/verify/:merchantOrderId', protect, checkPaymentStatus);
 router.get('/history', protect, getPaymentHistory);
 router.post('/refund/:merchantOrderId', adminOnly, initiateRefund);
 

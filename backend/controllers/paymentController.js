@@ -349,277 +349,6 @@ exports.initiateRefund = async (req, res) => {
     }
 };
 
-// @route   POST /api/payments/callback
-// @desc    PhonePe payment callback webhook
-exports.paymentCallback = async (req, res) => {
-    try {
-        console.log('📥 Payment Callback Received');
-        console.log('Headers:', req.headers);
-        console.log('Body:', req.body);
-
-        const { response } = req.body;
-        const xVerifyHeader = req.headers['x-verify'];
-
-        if (!response) {
-            console.error('❌ No response in callback');
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid callback data'
-            });
-        }
-
-        // Verify webhook using SDK
-        const verification = phonePeV2Client.verifyWebhook(response, xVerifyHeader);
-
-        if (!verification.valid) {
-            console.error('❌ Webhook verification failed:', verification.error);
-            return res.status(400).json({
-                success: false,
-                error: verification.error
-            });
-        }
-
-        console.log('✅ Webhook verified successfully');
-
-        const decodedData = verification.data.data;
-        const { transactionId, code } = decodedData;
-
-        // Find purchase
-        const purchase = await Payment.findOne({ transactionId });
-
-        if (!purchase) {
-            console.error('❌ Purchase not found:', transactionId);
-            return res.status(404).json({
-                success: false,
-                error: 'Purchase not found'
-            });
-        }
-
-        // Handle payment status
-        if (code === 'PAYMENT_SUCCESS') {
-            console.log('✅ Payment Successful:', transactionId);
-
-            // Generate download token
-            const downloadToken = crypto.randomBytes(32).toString('hex');
-            const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-
-            // Update purchase
-            purchase.paymentStatus = 'COMPLETED';
-            purchase.downloadToken = downloadToken;
-            purchase.downloadExpiresAt = expiresAt;
-            purchase.phonepeResponse = verification.data;
-            await purchase.save();
-
-            // Increment book download count
-            await Book.findByIdAndUpdate(purchase.book, {
-                $inc: { downloadCount: 1 }
-            });
-
-            console.log('✅ Purchase updated successfully');
-
-            return res.json({
-                success: true,
-                message: 'Payment successful',
-                data: {
-                    transactionId,
-                    downloadToken
-                }
-            });
-        } else {
-            console.log('❌ Payment Failed:', code);
-
-            // Update purchase as failed
-            purchase.paymentStatus = 'FAILED';
-            purchase.phonepeResponse = verification.data;
-            await purchase.save();
-
-            return res.json({
-                success: false,
-                message: 'Payment failed',
-                code
-            });
-        }
-
-    } catch (error) {
-        console.error('❌ Callback processing error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Callback processing failed: ' + error.message
-        });
-    }
-};
-
-// @route   GET /api/payments/status/:transactionId
-// @desc    Check payment status
-exports.checkPaymentStatus = async (req, res) => {
-    try {
-        const { transactionId } = req.params;
-
-        console.log('🔍 Checking payment status:', transactionId);
-
-        // Find purchase in database
-        const purchase = await Purchase.findOne({ transactionId })
-            .populate('book', 'title thumbnail price');
-
-        if (!purchase) {
-            return res.status(404).json({
-                success: false,
-                error: 'Transaction not found'
-            });
-        }
-
-        // Verify ownership
-        if (purchase.user.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                success: false,
-                error: 'Unauthorized access'
-            });
-        }
-
-        // Check status from PhonePe
-        try {
-            const statusResponse = await phonePeClient.checkStatus(transactionId);
-
-            console.log('📊 Status from PhonePe:', statusResponse);
-
-            // Update local database if status changed
-            if (statusResponse.success && statusResponse.data.state === 'COMPLETED') {
-                if (purchase.paymentStatus !== 'COMPLETED') {
-                    const downloadToken = crypto.randomBytes(32).toString('hex');
-                    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-                    purchase.paymentStatus = 'COMPLETED';
-                    purchase.downloadToken = downloadToken;
-                    purchase.downloadExpiresAt = expiresAt;
-                    await purchase.save();
-
-                    console.log('✅ Status updated to COMPLETED');
-                }
-            }
-        } catch (statusError) {
-            console.warn('⚠️  Status check failed, using DB status:', statusError.message);
-        }
-
-        res.json({
-            success: true,
-            data: {
-                transactionId: purchase.transactionId,
-                paymentStatus: purchase.paymentStatus,
-                amount: purchase.amount,
-                book: purchase.book,
-                downloadToken: purchase.downloadToken,
-                downloadExpiresAt: purchase.downloadExpiresAt,
-                downloadCount: purchase.downloadCount,
-                maxDownloads: purchase.maxDownloads
-            }
-        });
-
-    } catch (error) {
-        console.error('Status check error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-};
-
-// @route   POST /api/payments/refund
-// @desc    Initiate refund
-exports.initiateRefund = async (req, res) => {
-    try {
-        const { transactionId } = req.body;
-
-        // Find purchase
-        const purchase = await Purchase.findOne({ transactionId })
-            .populate('book');
-
-        if (!purchase) {
-            return res.status(404).json({
-                success: false,
-                error: 'Transaction not found'
-            });
-        }
-
-        // Verify admin or owner
-        if (!req.user.isAdmin && purchase.user.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                success: false,
-                error: 'Unauthorized'
-            });
-        }
-
-        // Validate refund eligibility
-        if (purchase.paymentStatus === 'REFUNDED') {
-            return res.status(400).json({
-                success: false,
-                error: 'Already refunded'
-            });
-        }
-
-        if (purchase.paymentStatus !== 'COMPLETED') {
-            return res.status(400).json({
-                success: false,
-                error: 'Cannot refund incomplete payment'
-            });
-        }
-
-        const refundTransactionId = `REFUND${Date.now()}${Math.random().toString(36).substr(2, 6)}`;
-        const amount = Math.round(purchase.amount * 100); // in paise
-
-        console.log('💸 Initiating refund:', {
-            originalTxn: transactionId,
-            refundTxn: refundTransactionId,
-            amount
-        });
-
-        // Prepare refund data
-        const refundData = {
-            userId: `USER${purchase.user}`,
-            originalTransactionId: transactionId,
-            refundTransactionId,
-            amount,
-            callbackUrl: process.env.PHONEPE_CALLBACK_URL
-        };
-
-        // Initiate refund
-        const refundResponse = await phonePeClient.initiateRefund(refundData);
-
-        if (refundResponse.success) {
-            console.log('✅ Refund initiated successfully');
-
-            // Update purchase status
-            purchase.paymentStatus = 'REFUNDED';
-            purchase.refundTransactionId = refundTransactionId;
-            purchase.refundedAt = new Date();
-            await purchase.save();
-
-            return res.json({
-                success: true,
-                message: 'Refund initiated successfully',
-                data: {
-                    refundTransactionId,
-                    amount: purchase.amount,
-                    status: refundResponse.data.state
-                }
-            });
-        } else {
-            console.error('❌ Refund failed:', refundResponse);
-            
-            return res.status(400).json({
-                success: false,
-                error: refundResponse.message || 'Refund initiation failed'
-            });
-        }
-
-    } catch (error) {
-        console.error('Refund error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Refund failed: ' + error.message
-        });
-    }
-};
-
 // @route   GET /api/payments/download/:token
 // @desc    Get secure download link
 exports.getDownloadLink = async (req, res) => {
@@ -670,6 +399,402 @@ exports.getDownloadLink = async (req, res) => {
         res.status(500).json({
             success: false,
             error: error.message
+        });
+    }
+};
+
+const verifyWebhookAuth = (authorizationHeader) => {
+    try {
+        const username = process.env.PHONEPE_WEBHOOK_USERNAME;
+        const password = process.env.PHONEPE_WEBHOOK_PASSWORD;
+
+        if (!username || !password) {
+            console.error('❌ Webhook credentials not configured in .env');
+            return false;
+        }
+
+        // PhonePe computes SHA256 of "username:password"
+        const expectedHash = crypto
+            .createHash('sha256')
+            .update(`${username}:${password}`)
+            .digest('hex');
+
+        // Authorization header from PhonePe = the SHA256 hash
+        const receivedHash = authorizationHeader?.replace('Basic ', '').trim();
+
+        const isValid = expectedHash === receivedHash;
+
+        if (!isValid) {
+            console.error('❌ Webhook auth mismatch', {
+                expected: expectedHash.substring(0, 20) + '...',
+                received: receivedHash?.substring(0, 20) + '...'
+            });
+        }
+
+        return isValid;
+
+    } catch (err) {
+        console.error('❌ Webhook auth verification error:', err.message);
+        return false;
+    }
+};
+
+/**
+ * S2S Webhook Handler
+ * Receives real-time payment status updates from PhonePe servers
+ */
+exports.handleWebhook = async (req, res) => {
+    try {
+        console.log('📥 PhonePe V2 Webhook received');
+
+        // ── Step 1: Verify Authorization header ──────────────────────────────
+        const authHeader = req.headers['authorization'];
+
+        if (!authHeader) {
+            console.error('❌ Webhook: Missing Authorization header');
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized' 
+            });
+        }
+
+        const isAuthValid = verifyWebhookAuth(authHeader);
+        if (!isAuthValid) {
+            console.error('❌ Webhook: Invalid Authorization header');
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized' 
+            });
+        }
+
+        // ── Step 2: Parse webhook body ────────────────────────────────────────
+        // V2 Webhook payload structure:
+        // {
+        //   "event": "checkout.order.completed" | "checkout.order.failed" | "pg.refund.accepted",
+        //   "payload": { orderId, merchantOrderId, state, amount, metaInfo, paymentDetails }
+        // }
+        const { event, payload } = req.body;
+
+        if (!event || !payload) {
+            console.error('❌ Webhook: Invalid payload structure');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid payload' 
+            });
+        }
+
+        console.log('📦 Webhook event:', event, '| Order:', payload.merchantOrderId);
+
+        // ── Step 3: Route by event type ────────────────────────────────────────
+        switch (event) {
+
+            case 'checkout.order.completed':
+                await handleOrderCompleted(payload);
+                break;
+
+            case 'checkout.order.failed':
+                await handleOrderFailed(payload);
+                break;
+
+            case 'pg.refund.accepted':
+                await handleRefundAccepted(payload);
+                break;
+
+            default:
+                console.log(`⚠️ Unhandled webhook event: ${event}`);
+        }
+
+        // ── Step 4: Always respond 200 to PhonePe ─────────────────────────────
+        // PhonePe will retry if it doesn't get a 200 response
+        res.status(200).json({ success: true, message: 'Webhook processed' });
+
+    } catch (err) {
+        console.error('❌ Webhook processing error:', err.message);
+        // Still respond 200 to prevent PhonePe retries for server errors
+        res.status(200).json({ success: true, message: 'Webhook received' });
+    }
+};
+
+/**
+ * Handle: checkout.order.completed
+ */
+const handleOrderCompleted = async (payload) => {
+    // IMPORTANT: Always rely on payload.state, NOT event name
+    const { merchantOrderId, orderId, state, amount, metaInfo, paymentDetails } = payload;
+
+    console.log(`✅ Order completed: ${merchantOrderId} | State: ${state}`);
+
+    const payment = await Payment.findOne({ merchantOrderId });
+    if (!payment) {
+        console.error('❌ Payment not found for webhook:', merchantOrderId);
+        return;
+    }
+
+    // Idempotency check - skip if already processed
+    if (payment.status === 'SUCCESS') {
+        console.log('⚠️ Payment already marked SUCCESS, skipping');
+        return;
+    }
+
+    // Extract payment details
+    const paymentDetail  = paymentDetails?.[0] || {};
+    const paymentMode    = paymentDetail.paymentMode;
+    const upiTransId     = paymentDetail.splitInstruments?.[0]?.rail?.upiTransactionId;
+    const vpa            = paymentDetail.splitInstruments?.[0]?.rail?.vpa;
+
+    // Update payment record
+    payment.status           = 'SUCCESS';
+    payment.phonePeOrderId   = orderId;
+    payment.paymentState     = state;
+    payment.paymentMethod    = paymentMode;
+    payment.completedAt      = new Date(paymentDetail.timestamp || Date.now());
+    payment.webhookReceived  = true;
+    payment.paymentInstrument = {
+        type: paymentMode,
+        upiTransactionId: upiTransId,
+        vpa
+    };
+
+    await payment.save();
+
+    // Add book to user's library
+    await User.findByIdAndUpdate(payment.userId, {
+        $addToSet: { purchasedBooks: payment.bookId }
+    });
+
+    console.log(`✅ Payment SUCCESS saved for ${merchantOrderId}`);
+};
+
+/**
+ * Handle: checkout.order.failed
+ */
+const handleOrderFailed = async (payload) => {
+    const { merchantOrderId, orderId, state, paymentDetails } = payload;
+
+    console.log(`❌ Order failed: ${merchantOrderId} | State: ${state}`);
+
+    const payment = await Payment.findOne({ merchantOrderId });
+    if (!payment) {
+        console.error('❌ Payment not found for failed webhook:', merchantOrderId);
+        return;
+    }
+
+    if (payment.status === 'FAILED') {
+        console.log('⚠️ Payment already marked FAILED, skipping');
+        return;
+    }
+
+    const paymentDetail = paymentDetails?.[0] || {};
+
+    payment.status          = 'FAILED';
+    payment.phonePeOrderId  = orderId;
+    payment.paymentState    = state;
+    payment.errorCode       = paymentDetail.errorCode;
+    payment.errorMessage    = paymentDetail.detailedErrorCode;
+    payment.webhookReceived = true;
+
+    await payment.save();
+
+    console.log(`❌ Payment FAILED saved for ${merchantOrderId}`);
+};
+
+/**
+ * Handle: pg.refund.accepted
+ */
+const handleRefundAccepted = async (payload) => {
+    const { originalMerchantOrderId, merchantRefundId, amount, state } = payload;
+
+    console.log(`💸 Refund accepted: ${merchantRefundId} | State: ${state}`);
+
+    const payment = await Payment.findOne({
+        merchantOrderId: originalMerchantOrderId
+    });
+
+    if (!payment) {
+        console.error('❌ Payment not found for refund webhook:', originalMerchantOrderId);
+        return;
+    }
+
+    payment.status      = 'REFUNDED';
+    payment.refundedAt  = new Date();
+    payment.refundId    = payload.paymentDetails?.[0]?.transactionId || merchantRefundId;
+
+    await payment.save();
+
+    // Remove book from user's library
+    await User.findByIdAndUpdate(payment.userId, {
+        $pull: { purchasedBooks: payment.bookId }
+    });
+
+    console.log(`💸 Refund SUCCESS saved for ${originalMerchantOrderId}`);
+};
+
+
+// ============================================================================
+// 2. UI REDIRECT CALLBACK HANDLER
+//    GET /api/payments/v2/redirect-callback
+//    This is the redirectUrl you pass when creating the payment.
+//    User's browser lands here after completing payment on PhonePe page.
+// ============================================================================
+
+
+exports.handleRedirectCallback = async (req, res) => {
+    try {
+        // PhonePe appends merchantOrderId to your redirectUrl as a query param
+        const { merchantOrderId } = req.query;
+
+        if (!merchantOrderId) {
+            console.error('❌ Redirect callback: Missing merchantOrderId');
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/payment/error?reason=missing_order`
+            );
+        }
+
+        console.log('🔄 Redirect callback received for:', merchantOrderId);
+
+        // Find local payment record
+        const payment = await Payment.findOne({ merchantOrderId });
+        if (!payment) {
+            console.error('❌ Redirect callback: Payment not found:', merchantOrderId);
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/payment/error?reason=not_found`
+            );
+        }
+
+        // If webhook already updated status, use it directly
+        if (payment.webhookReceived && payment.status === 'SUCCESS') {
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/payment/success` +
+                `?orderId=${merchantOrderId}` +
+                `&bookId=${payment.bookId}`
+            );
+        }
+
+        if (payment.webhookReceived && payment.status === 'FAILED') {
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/payment/failed` +
+                `?orderId=${merchantOrderId}` +
+                `&reason=${payment.errorCode || 'payment_failed'}`
+            );
+        }
+
+        // Webhook not yet received → manually check status via API
+        console.log('🔍 Webhook not received yet, checking status via API...');
+
+        const statusResponse = await phonePeV2Client.checkOrderStatus(merchantOrderId);
+
+        if (statusResponse.paymentStatus === 'SUCCESS') {
+            // Update payment if not already done
+            if (payment.status !== 'SUCCESS') {
+                payment.status          = 'SUCCESS';
+                payment.paymentState    = statusResponse.state;
+                payment.paymentMethod   = statusResponse.paymentInstrument?.type;
+                payment.completedAt     = new Date();
+                payment.paymentInstrument = statusResponse.paymentInstrument;
+                await payment.save();
+
+                await User.findByIdAndUpdate(payment.userId, {
+                    $addToSet: { purchasedBooks: payment.bookId }
+                });
+            }
+
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/payment/success` +
+                `?orderId=${merchantOrderId}` +
+                `&bookId=${payment.bookId}`
+            );
+
+        } else if (statusResponse.paymentStatus === 'FAILED') {
+            if (payment.status !== 'FAILED') {
+                payment.status = 'FAILED';
+                await payment.save();
+            }
+
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/payment/failed` +
+                `?orderId=${merchantOrderId}` +
+                `&reason=payment_failed`
+            );
+
+        } else {
+            // PENDING state - redirect to processing page
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/payment/processing` +
+                `?orderId=${merchantOrderId}`
+            );
+        }
+
+    } catch (err) {
+        console.error('❌ Redirect callback error:', err.message);
+        return res.redirect(
+            `${process.env.FRONTEND_URL}/payment/error?reason=server_error`
+        );
+    }
+};
+
+
+// ============================================================================
+// 3. PAYMENT STATUS CHECK API
+//    GET /api/payments/v2/status/:merchantOrderId
+//    Called from frontend polling when payment is in PENDING state
+// ============================================================================
+
+exports.getPaymentStatus = async (req, res) => {
+    try {
+        const { merchantOrderId } = req.params;
+        const userId = req.user.id;
+
+        const payment = await Payment.findOne({ merchantOrderId, userId })
+            .populate('bookId', 'title coverImage downloadUrl price');
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Payment not found'
+            });
+        }
+
+        // If not yet confirmed via webhook, check with PhonePe API
+        if (payment.status === 'PENDING' && !payment.webhookReceived) {
+            const statusResponse = await phonePeV2Client.checkOrderStatus(merchantOrderId);
+
+            if (statusResponse.paymentStatus === 'SUCCESS') {
+                payment.status        = 'SUCCESS';
+                payment.paymentState  = statusResponse.state;
+                payment.completedAt   = new Date();
+                payment.paymentInstrument = statusResponse.paymentInstrument;
+                await payment.save();
+
+                await User.findByIdAndUpdate(userId, {
+                    $addToSet: { purchasedBooks: payment.bookId }
+                });
+
+            } else if (statusResponse.paymentStatus === 'FAILED') {
+                payment.status = 'FAILED';
+                await payment.save();
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                status: payment.status,
+                merchantOrderId: payment.merchantOrderId,
+                phonePeOrderId: payment.phonePeOrderId,
+                amount: payment.amount / 100,
+                paymentMethod: payment.paymentMethod,
+                book: payment.bookId,
+                completedAt: payment.completedAt,
+                webhookReceived: payment.webhookReceived
+            }
+        });
+
+    } catch (err) {
+        console.error('❌ Status check error:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get payment status',
+            error: err.message
         });
     }
 };
