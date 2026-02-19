@@ -1,27 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { paymentAPI } from '@/lib/api';
-const getPaymentStatus = async (merchantOrderId) => {
-        const res = await paymentAPI.getStatus(merchantOrderId);
-        if (!res.success) throw new Error(res.message || 'Status check failed');
-        console.log("getPaymentStatus API Data:", res);
-        return res.data; 
-    };
 
 export default function PaymentCallback() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    const merchantOrderId = searchParams.get('orderId');
+    const [merchantOrderId, setMerchantOrderId] = useState(null);
     const [statusMsg, setStatusMsg] = useState('Verifying your payment...');
-    
+
     useEffect(() => {
-        if (!merchantOrderId) {
-            router.push('/payment/error?reason=missing_order');
-            return;
-        }
+        const id = searchParams.get('orderId');
+        setMerchantOrderId(id);
+    }, [searchParams]);
+
+    useEffect(() => {
+        if (!merchantOrderId) return;
 
         let attempts = 0;
         const maxAttempts = 6;
@@ -29,26 +25,28 @@ export default function PaymentCallback() {
 
         const poll = async () => {
             try {
-                console.log("Calling status API with:", merchantOrderId);
+                const res = await paymentAPI.getStatus(merchantOrderId);
+                const data = res.data;
+                console.log("Checking Status:", data);
 
-                const data = await getPaymentStatus(merchantOrderId);
+                const status =
+                data?.status ||
+                data?.state ||
+                data?.data?.status ||
+                data?.data?.state;
 
-                console.log("Payment Status Data:", data);
+                console.log("Resolved Status:", status);
 
-                if (!data) {
-                    console.log("No data returned");
-                    return;
-                }
-            
-                if (data.status === 'SUCCESS') {
+                if (status === 'SUCCESS' || status === 'COMPLETED') {
                     router.push(`/payment/success?orderId=${merchantOrderId}`);
                     return;
                 }
 
-                if (data.status === 'FAILED') {
+                if (status === 'FAILED') {
                     router.push(`/payment/failed?orderId=${merchantOrderId}`);
                     return;
                 }
+
 
                 attempts++;
                 setStatusMsg(`Confirming payment... (${attempts}/${maxAttempts})`);
@@ -60,6 +58,8 @@ export default function PaymentCallback() {
                 }
 
             } catch (err) {
+                console.error("Status Error:", err);
+
                 attempts++;
                 if (attempts < maxAttempts) {
                     setTimeout(poll, intervalMs);
@@ -70,8 +70,8 @@ export default function PaymentCallback() {
         };
 
         poll();
-    }, [merchantOrderId]);
 
+    }, [merchantOrderId, router]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -87,4 +87,3 @@ export default function PaymentCallback() {
         </div>
     );
 }
-
