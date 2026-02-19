@@ -3,12 +3,16 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { paymentAPI } from '@/lib/api';
-
+import { useAuth } from '@/context/AuthContext';
 function PaymentCallbackContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { user } = useAuth();
     const [statusMsg, setStatusMsg] = useState('Verifying your payment...');
-
+    
+    if(!user){
+        router.push('/login');
+    }
     useEffect(() => {
         const merchantOrderId = searchParams.get('orderId');
         

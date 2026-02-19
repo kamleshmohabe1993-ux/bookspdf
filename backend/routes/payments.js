@@ -30,7 +30,7 @@ router.post('/webhook', handleWebhook); // PhonePe webhook (no auth)
 router.get('/redirect-callback', handleRedirectCallback);
 
 // Status polling: Called by frontend (requires auth)
-router.get('/status/:merchantOrderId', getPaymentStatus);
+router.get('/status/:merchantOrderId',protect, getPaymentStatus);
 
 
 // Protected routes (require authentication)

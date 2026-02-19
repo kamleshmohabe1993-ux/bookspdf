@@ -8,7 +8,6 @@ import { bookAPI, paymentAPI } from '@/lib/api';
 import PaymentModal from '@/components/PaymentModal';
 import QRCodeModal from '@/components/QRCodeModal';
 import SocialShareButton from '@/components/ShareCard';
-import DebugPanel from '@/components/DebugPanel';
 import showToast from '@/lib/toast';
 import axios from 'axios';
 import CompactCommunityButtons from '@/components/communityCards';
@@ -316,9 +315,6 @@ export default function BookDetailsPage() {
             addFlowStep('Starting Free Download');
 
             const response = await paymentAPI.freeDownload(book._id);
-            // const response = await axios.post(
-            //     `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/payments/downloadfree`, {bookId: book._id}
-            // );
             
             window.open(response.data.data.downloadUrl, '_blank');
             

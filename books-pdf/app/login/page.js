@@ -39,6 +39,7 @@ export default function LoginPage() {
             // router.push('/');
             showToast.success('Login successful!');
         } else {
+            router.push('/login');
             setError(result.error);
         }
 

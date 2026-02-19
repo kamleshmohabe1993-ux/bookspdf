@@ -36,7 +36,7 @@ exports.initiatePayment = async (req, res) => {
         const existingPurchase = await Payment.findOne({
             userId,
             bookId,
-            status: 'SUCCESS'
+            status: 'SUCCESS || COMPLETED'
         });
 
         if (existingPurchase) {
@@ -61,10 +61,17 @@ exports.initiatePayment = async (req, res) => {
             merchantOrderId,
             amount: amountInPaise,
             status: 'INITIATED',
+            paymentGateway: 'PhonePe',
+            downloadToken,
+            maxDownloads: 100,
             userMobile: req.user.mobileNumber,
             userEmail: req.user.email
         });
 
+        // Increment download count
+        await Book.findByIdAndUpdate(bookId, {
+            $inc: { downloadCount: 1 }
+        });
         await payment.save();
 
         // V2 Payment Data
@@ -388,8 +395,8 @@ exports.getDownloadLink = async (req, res) => {
         res.json({
             success: true,
             data: {
-                downloadUrl: purchase.book.pdfDownloadLink,
-                filename: `${purchase.book.title}.pdf`,
+                downloadUrl: purchase.bookId.pdfDownloadLink,
+                filename: `${purchase.bookId.title}.pdf`,
                 remainingDownloads: purchase.maxDownloads - purchase.downloadCount,
                 expiresAt: purchase.downloadExpiresAt
             }
@@ -823,37 +830,38 @@ exports.freeDownload = async (req, res) => {
         }
 
         // Check if already downloaded
-        const existingDownload = await Purchase.findOne({
-            user: userId,
-            book: bookId
+        const existingDownload = await Payment.findOne({
+            userId: userId,
+            bookId: bookId
         });
 
         if (existingDownload) {
             return res.json({
                 success: true,
                 data: {
-                    downloadUrl: book.pdfDownloadLink,
-                    filename: `${book.title}.pdf`,
+                    downloadUrl: bookId.pdfDownloadLink,
+                    filename: `${bookId.title}.pdf`,
                     downloadToken: existingDownload.downloadToken
                 }
             });
         }
 
         // Create free download record - FIXED: Use correct enum value
-        const transactionId = `FREE${Date.now()}${userId.toString().slice(-6)}`;
+        const merchantOrderId = `FREE${Date.now()}${userId.toString().slice(-6)}`;
         const downloadToken = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
 
-        await Purchase.create({
-            user: userId,
-            book: bookId,
-            transactionId,
+        await Payment.create({
+            userId: userId,
+            bookId: bookId,
+            merchantOrderId,
             amount: 0,
-            paymentStatus: 'COMPLETED',
+            status: 'SUCCESS',
             paymentGateway: 'Free', // Changed from 'free' to match enum
             downloadToken,
             downloadExpiresAt: expiresAt,
-            maxDownloads: 100
+            maxDownloads: 100,
+            paymentState: 'COMPLETED'
         });
 
         // Increment download count
@@ -882,13 +890,12 @@ exports.freeDownload = async (req, res) => {
 // @desc    Get user's purchase history
 exports.getMyPurchases = async (req, res) => {
     try {
-        const purchases = await Purchase.find({
-            user: req.user._id,
-            paymentStatus: 'COMPLETED'
+        const purchases = await Payment.find({
+            userId: req.user._id,
+            paymentState: 'COMPLETED'
         })
-            .populate('book', 'title author thumbnail price isPaid')
+            .populate('bookId', 'title author thumbnail price isPaid')
             .sort({ purchasedAt: -1 });
-
         res.json({
             success: true,
             count: purchases.length,
@@ -1168,8 +1175,8 @@ exports.exportTransactions = async (req, res) => {
         }
 
         const transactions = await Payment.find(query)
-            .populate('user', 'fullName email')
-            .populate('book', 'title')
+            .populate('userId', 'fullName email')
+            .populate('bookId', 'title')
             .sort({ purchasedAt: -1 });
 
         // Create CSV content

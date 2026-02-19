@@ -44,6 +44,7 @@ export default function MyLibraryPage() {
         try {
             const response = await paymentAPI.getMyPurchases();
             setPurchases(response.data.data);
+            console.log("response.data.data",response.data.data);
         } catch (error) {
             console.error('Error loading purchases:', error);
             showToast.error('Failed to load your library');
@@ -277,7 +278,7 @@ export default function MyLibraryPage() {
                     <div className="grid md:grid-cols-2 gap-6">
                         {purchases.map((purchase) => {
                             // Safe check for purchase and book
-                            if (!purchase || !purchase.book) {
+                            if (!purchase || !purchase.bookId) {
                         console.warn('Invalid purchase data:', purchase);
                         return null;
                     }
@@ -290,8 +291,8 @@ export default function MyLibraryPage() {
                                     <div className="flex">
                                         <div className="w-1/3 bg-gray-100 p-4 flex items-center justify-center">
                                            <img
-                                              src={getBookThumbnail(purchase.book)}
-                                              alt={purchase.book?.title || 'Book cover'}
+                                              src={getBookThumbnail(purchase.bookId)}
+                                              alt={purchase.bookId?.title || 'Book cover'}
                                               onError={(e) => {
                                                   e.target.src = '/placeholder-book.jpg';
                                               }}
@@ -300,11 +301,11 @@ export default function MyLibraryPage() {
 
                                         <div className="w-2/3 p-4">
                                             <h3 className="text-xl text-gray-800 font-bold mb-2">
-                                                {purchase.book?.title || 'Untitled Book'}
+                                                {purchase.bookId?.title || 'Untitled Book'}
                                             </h3>
-                                            {purchase.book?.author && (
+                                            {purchase.bookId?.author && (
                                                 <p className="text-gray-600 text-sm mb-3">
-                                                    by {purchase.book.author}
+                                                    by {purchase.bookId.author}
                                                 </p>
                                             )}
 
@@ -316,12 +317,17 @@ export default function MyLibraryPage() {
                                                     </span>
                                                 </div>
 
-                                                {purchase.book?.isPaid && (
+                                                {purchase.bookId?.isPaid ?(
                                                     <div className="flex items-center gap-2 text-green-600">
                                                         <IndianRupee size={16} />
                                                         <span>Paid: ₹{purchase.amount || 0}</span>
                                                     </div>
-                                                )}
+                                                ):(
+                                                <div className="flex items-center gap-2 text-green-600">
+                                                        <IndianRupee size={16} />
+                                                        <span>FREE</span>
+                                                    </div>)
+                                                }
 
                                                 <div className="flex items-center gap-2 text-gray-600">
                                                     <Download size={16} />
