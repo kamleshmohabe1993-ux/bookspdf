@@ -635,9 +635,6 @@ export default function BookDetailsPage() {
                                     {/* Visual Indicator - Responsive */}
                                     {book.isPaid && !processing && (
                                         <div className="bg-linear-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-3 sm:p-4 text-center">
-                                            <div>
-                                            <span className="font-md text-red-700">Note: The Payment Page Under Maintenance!</span>
-                                            </div>
                                             <p className="text-xs sm:text-sm font-semibold text-purple-900 mb-2">
                                                 💳 Quick & Secure Checkout
                                             </p>
