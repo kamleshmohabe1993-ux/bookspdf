@@ -9,7 +9,8 @@ const getPaymentStatus = async (merchantOrderId) => {
         console.log("getPaymentStatus API Data:", res);
         return res.data; 
     };
-const PaymentCallback = () => {
+
+export default function PaymentCallback() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -85,6 +86,5 @@ const PaymentCallback = () => {
             </div>
         </div>
     );
-};
+}
 
-export default PaymentCallback;
