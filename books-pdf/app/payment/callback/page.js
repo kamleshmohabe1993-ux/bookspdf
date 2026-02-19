@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -85,12 +84,7 @@ export default function PaymentCallback() {
     return (
         <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center p-8">
-                    <div className="animate-spin text-5xl mb-6">⏳</div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                        Loading...
-                    </h2>
-                </div>
+                <div className="animate-spin text-5xl">⏳</div>
             </div>
         }>
             <PaymentCallbackContent />
