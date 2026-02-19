@@ -91,10 +91,11 @@ export const paymentAPI = {
     getDownloadLink: (token) => api.get(`/payments/download/${token}`),
     
     // Verify payment
-    verify: (transactionId) => api.post('/payments/verify', { transactionId }),
+    verify: (merchantOrderId) => api.post('/payments/status', { merchantOrderId }),
     
     // Get payment status
-    getStatus: (transactionId) => api.get(`/payments/status/${transactionId}`),
+    getStatus: (merchantOrderId) => api.get(`/payments/status/${merchantOrderId}`),
+    
     getMyPurchases: () => api.get('/payments/my-purchases'),
 
     // Get all payments

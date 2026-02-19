@@ -7,7 +7,7 @@ const Payment = require('../models/Payment');
 const generateOrderId = () => {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
-    return `ORDER${timestamp}${random}`;
+    return `TXN${timestamp}${random}`;
 };
 
 
@@ -355,8 +355,8 @@ exports.getDownloadLink = async (req, res) => {
     try {
         const { token } = req.params;
 
-        const purchase = await Purchase.findOne({ downloadToken: token })
-            .populate('book');
+        const purchase = await Payment.findOne({ downloadToken: token })
+            .populate('bookId');
 
         if (!purchase) {
             return res.status(404).json({
@@ -742,10 +742,10 @@ exports.handleRedirectCallback = async (req, res) => {
 exports.getPaymentStatus = async (req, res) => {
     try {
         const { merchantOrderId } = req.params;
-        const userId = req.user.id;
+        // const userId = req.user.id;
 
-        const payment = await Payment.findOne({ merchantOrderId, userId })
-            .populate('bookId', 'title coverImage downloadUrl price');
+        const payment = await Payment.findOne({ merchantOrderId })
+            .populate('bookId', 'title thumbnail pdfDownloadLink price');
 
         if (!payment) {
             return res.status(404).json({
@@ -938,8 +938,8 @@ exports.getAllTransactions = async (req, res) => {
 
         // Fetch all transactions with populated user and book details
         const transactions = await Payment.find(query)
-            .populate('user', 'fullName email mobileNumber') // Populate user details
-            .populate('book', 'title author thumbnail price category') // Populate book details
+            .populate('userId', 'fullName email mobileNumber') // Populate user details
+            .populate('bookId', 'title author thumbnail price category') // Populate book details
             .sort({ purchasedAt: -1 }) // Sort by most recent first
             .lean(); // Convert to plain JavaScript objects for better performance
 
@@ -951,7 +951,7 @@ exports.getAllTransactions = async (req, res) => {
             failed: transactions.filter(t => t.status === 'FAILED').length,
             refunded: transactions.filter(t => t.status === 'REFUNDED').length,
             totalRevenue: transactions
-                .filter(t => t.paymentStatus === 'COMPLETED')
+                .filter(t => t.status === 'COMPLETED')
                 .reduce((sum, t) => sum + (t.amount || 0), 0)
         };
 
@@ -1213,9 +1213,9 @@ exports.deleteTransaction = async (req, res) => {
         console.log('🗑️ Attempting to delete transaction:', transactionId);
 
         // Find the transaction
-        const transaction = await Purchase.findById(transactionId)
-            .populate('user', 'fullName email')
-            .populate('book', 'title');
+        const transaction = await Payment.findById(transactionId)
+            .populate('userId', 'fullName email')
+            .populate('bookId', 'title');
 
         if (!transaction) {
             return res.status(404).json({
@@ -1228,7 +1228,7 @@ exports.deleteTransaction = async (req, res) => {
         // Only allow deletion of FAILED or PENDING transactions by default
         const deletableStatuses = ['FAILED', 'PENDING'];
         
-        if (!deletableStatuses.includes(transaction.paymentStatus)) {
+        if (!deletableStatuses.includes(transaction.status)) {
             // For COMPLETED or REFUNDED transactions, require additional confirmation
             // You might want to add a query parameter like ?force=true
             const forceDelete = req.query.force === 'true';
@@ -1236,10 +1236,10 @@ exports.deleteTransaction = async (req, res) => {
             if (!forceDelete) {
                 return res.status(400).json({
                     success: false,
-                    error: `Cannot delete ${transaction.paymentStatus} transaction without force flag. This transaction has been completed.`,
+                    error: `Cannot delete ${transaction.status} transaction without force flag. This transaction has been completed.`,
                     data: {
                         transactionId: transaction.transactionId,
-                        status: transaction.paymentStatus,
+                        status: transaction.status,
                         amount: transaction.amount,
                         user: transaction.user?.fullName,
                         book: transaction.book?.title,
@@ -1261,7 +1261,7 @@ exports.deleteTransaction = async (req, res) => {
         });
 
         // If transaction was COMPLETED, we need to reverse the book download count
-        if (transaction.paymentStatus === 'COMPLETED' && transaction.book) {
+        if (transaction.status === 'COMPLETED' && transaction.book) {
             await Book.findByIdAndUpdate(
                 transaction.book._id,
                 { $inc: { downloadCount: -1 } }
@@ -1335,7 +1335,7 @@ exports.bulkDeleteTransactions = async (req, res) => {
         });
 
         // Find all transactions
-        const transactions = await Purchase.find({ 
+        const transactions = await Payment.find({ 
             _id: { $in: transactionIds } 
         }).populate('book', 'title');
 
@@ -1348,7 +1348,7 @@ exports.bulkDeleteTransactions = async (req, res) => {
 
         // Check if any transactions are COMPLETED or REFUNDED
         const protectedTransactions = transactions.filter(t => 
-            t.paymentStatus === 'COMPLETED' || t.paymentStatus === 'REFUNDED'
+            t.status === 'COMPLETED' || t.status === 'REFUNDED'
         );
 
         if (protectedTransactions.length > 0 && !force) {
@@ -1364,7 +1364,7 @@ exports.bulkDeleteTransactions = async (req, res) => {
         }
 
         // Reverse book download counts for COMPLETED transactions
-        const completedTransactions = transactions.filter(t => t.paymentStatus === 'COMPLETED');
+        const completedTransactions = transactions.filter(t => t.status === 'COMPLETED');
         for (const transaction of completedTransactions) {
             if (transaction.book) {
                 await Book.findByIdAndUpdate(
@@ -1424,7 +1424,7 @@ exports.cleanupFailedTransactions = async (req, res) => {
         console.log('🧹 Cleaning up failed transactions older than:', cutoffDate);
 
         // Find failed transactions older than cutoff date
-        const failedTransactions = await Purchase.find({
+        const failedTransactions = await Payment.find({
             paymentStatus: 'FAILED',
             purchasedAt: { $lt: cutoffDate }
         });
@@ -1441,7 +1441,7 @@ exports.cleanupFailedTransactions = async (req, res) => {
 
         // Delete them
         const result = await Purchase.deleteMany({
-            paymentStatus: 'FAILED',
+            status: 'FAILED',
             purchasedAt: { $lt: cutoffDate }
         });
 

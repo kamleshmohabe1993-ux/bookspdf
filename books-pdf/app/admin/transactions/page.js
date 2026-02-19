@@ -71,8 +71,8 @@ export default function TransactionsPage() {
                 const confirmed = window.confirm(
                     `⚠️ WARNING: This is a ${response.data.data.status} transaction.\n\n` +
                     `Amount: ₹${response.data.data.amount}\n` +
-                    `User: ${response.data.data.user}\n` +
-                    `Book: ${response.data.data.book}\n\n` +
+                    `User: ${response.data.data.userId}\n` +
+                    `Book: ${response.data.data.bookId}\n\n` +
                     `Are you absolutely sure you want to delete this transaction? This action cannot be undone.`
                 );
                 
@@ -90,8 +90,8 @@ export default function TransactionsPage() {
                 const confirmed = window.confirm(
                     `⚠️ WARNING: This is a ${error.response.data.data.status} transaction.\n\n` +
                     `Amount: ₹${error.response.data.data.amount}\n` +
-                    `User: ${error.response.data.data.user}\n` +
-                    `Book: ${error.response.data.data.book}\n\n` +
+                    `User: ${error.response.data.data.userId}\n` +
+                    `Book: ${error.response.data.data.bookId}\n\n` +
                     `Are you absolutely sure you want to delete this transaction? This action cannot be undone.`
                 );
                 
@@ -185,15 +185,15 @@ export default function TransactionsPage() {
         let filtered = transactions;
 
         if (filter !== 'all') {
-            filtered = filtered.filter(txn => txn.paymentStatus === filter);
+            filtered = filtered.filter(txn => txn.status === filter);
         }
 
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(txn => 
                 txn.merchantOrderId?.toLowerCase().includes(query) ||
-                txn.user?.fullName?.toLowerCase().includes(query) ||
-                txn.book?.title?.toLowerCase().includes(query)
+                txn.userId?.fullName?.toLowerCase().includes(query) ||
+                txn.bookId?.title?.toLowerCase().includes(query)
             );
         }
 
@@ -261,12 +261,12 @@ export default function TransactionsPage() {
     // Statistics
     const stats = {
         total: transactions.length,
-        completed: transactions.filter(t => t.paymentStatus === 'COMPLETED').length,
-        pending: transactions.filter(t => t.paymentStatus === 'PENDING').length,
-        failed: transactions.filter(t => t.paymentStatus === 'FAILED').length,
-        refunded: transactions.filter(t => t.paymentStatus === 'REFUNDED').length,
+        completed: transactions.filter(t => t.status === 'COMPLETED').length,
+        pending: transactions.filter(t => t.status === 'PENDING').length,
+        failed: transactions.filter(t => t.status === 'FAILED').length,
+        refunded: transactions.filter(t => t.status === 'REFUNDED').length,
         totalRevenue: transactions
-            .filter(t => t.paymentStatus === 'COMPLETED')
+            .filter(t => t.status === 'COMPLETED')
             .reduce((sum, t) => sum + t.amount, 0)
     };
 
@@ -470,13 +470,13 @@ export default function TransactionsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 <div>
-                                                    <p className="font-medium">{txn.user?.fullName || 'N/A'}</p>
-                                                    <p className="text-xs text-gray-500">{txn.user?.email || ''}</p>
+                                                    <p className="font-medium">{txn.userId?.fullName || 'N/A'}</p>
+                                                    <p className="text-xs text-gray-500">{txn.userId?.email || ''}</p>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 <div className="max-w-xs truncate">
-                                                    {txn.book?.title || 'N/A'}
+                                                    {txn.bookId?.title || 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm font-semibold text-gray-900">
@@ -487,8 +487,8 @@ export default function TransactionsPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(txn.paymentStatus)}`}>
-                                                    {getStatusIcon(txn.paymentStatus)}
-                                                    {txn.paymentStatus}
+                                                    {getStatusIcon(txn.status)}
+                                                    {txn.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500">
@@ -577,8 +577,8 @@ export default function TransactionsPage() {
                                 {/* Status Badge */}
                                 <div className="flex items-center justify-between mb-3">
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(txn.paymentStatus)}`}>
-                                        {getStatusIcon(txn.paymentStatus)}
-                                        {txn.paymentStatus}
+                                        {getStatusIcon(txn.status)}
+                                        {txn.status}
                                     </span>
                                     <span className="text-xs text-gray-500">
                                         {new Date(txn.purchasedAt).toLocaleDateString('en-US', {
@@ -599,7 +599,7 @@ export default function TransactionsPage() {
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
                                             <p className="text-xs text-gray-500">User</p>
-                                            <p className="text-sm text-gray-900 truncate">{txn.user?.fullName || 'N/A'}</p>
+                                            <p className="text-sm text-gray-900 truncate">{txn.userId?.fullName || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500">Amount</p>
@@ -612,7 +612,7 @@ export default function TransactionsPage() {
 
                                     <div>
                                         <p className="text-xs text-gray-500">Book</p>
-                                        <p className="text-sm text-gray-900 line-clamp-2">{txn.book?.title || 'N/A'}</p>
+                                        <p className="text-sm text-gray-900 line-clamp-2">{txn.bookId?.title || 'N/A'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -776,8 +776,8 @@ export default function TransactionsPage() {
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Status</p>
                                     <span className={`inline-flex items-center gap-1 px-3 py-1 text-gray-700 rounded-full text-xs font-semibold ${getStatusColor(selectedTransaction.paymentStatus)}`}>
-                                        {getStatusIcon(selectedTransaction.paymentStatus)}
-                                        {selectedTransaction.paymentStatus}
+                                        {getStatusIcon(selectedTransaction.status)}
+                                        {selectedTransaction.status}
                                     </span>
                                 </div>
                                 <div>
@@ -799,9 +799,9 @@ export default function TransactionsPage() {
                                     User Information
                                 </h4>
                                 <div className="space-y-2 bg-gray-50 text-gray-700 p-4 rounded-lg">
-                                    <p><span className="text-gray-600">Name:</span> {selectedTransaction.user?.fullName}</p>
-                                    <p><span className="text-gray-600">Email:</span> {selectedTransaction.user?.email}</p>
-                                    <p><span className="text-gray-600">Phone:</span> {selectedTransaction.user?.mobileNumber}</p>
+                                    <p><span className="text-gray-600">Name:</span> {selectedTransaction.userId?.fullName}</p>
+                                    <p><span className="text-gray-600">Email:</span> {selectedTransaction.userId?.email}</p>
+                                    <p><span className="text-gray-600">Phone:</span> {selectedTransaction.userId?.mobileNumber}</p>
                                 </div>
                             </div>
 
@@ -811,12 +811,12 @@ export default function TransactionsPage() {
                                     Book Information
                                 </h4>
                                 <div className="space-y-2 bg-gray-50 text-gray-700 p-4 rounded-lg">
-                                    <p><span className="text-gray-600">Title:</span> {selectedTransaction.book?.title}</p>
-                                    <p><span className="text-gray-600">Author:</span> {selectedTransaction.book?.author}</p>
+                                    <p><span className="text-gray-600">Title:</span> {selectedTransaction.bookId?.title}</p>
+                                    <p><span className="text-gray-600">Author:</span> {selectedTransaction.bookId?.author}</p>
                                     <p className="flex items-center gap-1">
                                         <span className="text-gray-600">Price:</span> 
                                         <IndianRupee size={14} />
-                                        {selectedTransaction.book?.price}
+                                        {selectedTransaction.bookId?.price}
                                     </p>
                                 </div>
                             </div>
