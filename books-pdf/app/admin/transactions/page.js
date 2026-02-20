@@ -69,7 +69,7 @@ export default function TransactionsPage() {
             } else if (response.data.requiresForce) {
                 // Show confirmation for force delete
                 const confirmed = window.confirm(
-                    `⚠️ WARNING: This is a ${response.data.data.status} transaction.\n\n` +
+                    `⚠️ WARNING: This is a ${response.data.data.paymentState} transaction.\n\n` +
                     `Amount: ₹${response.data.data.amount}\n` +
                     `User: ${response.data.data.userId}\n` +
                     `Book: ${response.data.data.bookId}\n\n` +
@@ -88,7 +88,7 @@ export default function TransactionsPage() {
             // Check if force is required
             if (error.response?.data?.requiresForce) {
                 const confirmed = window.confirm(
-                    `⚠️ WARNING: This is a ${error.response.data.data.status} transaction.\n\n` +
+                    `⚠️ WARNING: This is a ${error.response.data.data.paymentState} transaction.\n\n` +
                     `Amount: ₹${error.response.data.data.amount}\n` +
                     `User: ${error.response.data.data.userId}\n` +
                     `Book: ${error.response.data.data.bookId}\n\n` +
@@ -359,7 +359,7 @@ export default function TransactionsPage() {
                             key={paymentState}
                             onClick={() => setFilter(paymentState)}
                             className={`px-3 sm:px-4 py-2 rounded-lg font-semibold transition-all text-xs sm:text-sm ${
-                                filter === status
+                                filter === paymentState
                                     ? 'bg-blue-600 text-white shadow-md'
                                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                             }`}
@@ -577,8 +577,8 @@ export default function TransactionsPage() {
                                 {/* Status Badge */}
                                 <div className="flex items-center justify-between mb-3">
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(txn.paymentStatus)}`}>
-                                        {getStatusIcon(txn.status)}
-                                        {txn.status}
+                                        {getStatusIcon(txn.paymentState)}
+                                        {txn.paymentState}
                                     </span>
                                     <span className="text-xs text-gray-500">
                                         {new Date(txn.purchasedAt).toLocaleDateString('en-US', {
@@ -776,8 +776,8 @@ export default function TransactionsPage() {
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Status</p>
                                     <span className={`inline-flex items-center gap-1 px-3 py-1 text-gray-700 rounded-full text-xs font-semibold ${getStatusColor(selectedTransaction.paymentStatus)}`}>
-                                        {getStatusIcon(selectedTransaction.status)}
-                                        {selectedTransaction.status}
+                                        {getStatusIcon(selectedTransaction.paymentState)}
+                                        {selectedTransaction.paymentState}
                                     </span>
                                 </div>
                                 <div>
