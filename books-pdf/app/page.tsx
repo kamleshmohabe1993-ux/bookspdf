@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
-import { useState, useEffect, SetStateAction, useCallback, useRef } from 'react';
+import { useState, useEffect, SetStateAction, useCallback, useRef, Key } from 'react';
 import { useRouter } from 'next/navigation';
 import { Book, Search, LogIn, Download, Eye, Trash2, ArrowLeft, Filter, AlertCircle, IndianRupee, Library, User, LogOut, Menu, X, LucideHome, LockIcon } from 'lucide-react';
 import { bookAPI } from '@/lib/api';
@@ -385,7 +385,7 @@ const BookCarousel = ({ books, title, icon, autoRotate = true, interval = 5000 }
       {/* Position Indicator */}
       {books.length > booksPerSlide && (
         <div className="flex justify-center gap-1 mt-6">
-          {books.map((_, index) => (
+          {books.map((_: unknown, index: Key | null | undefined) => (
             <div
               key={index}
               className={`h-2 rounded-full transition-all ${
