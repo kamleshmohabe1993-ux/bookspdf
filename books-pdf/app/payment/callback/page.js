@@ -10,9 +10,7 @@ function PaymentCallbackContent() {
     const { user } = useAuth();
     const [statusMsg, setStatusMsg] = useState('Verifying your payment...');
     
-    if(!user){
-        router.push('/login');
-    }
+    
     useEffect(() => {
         const merchantOrderId = searchParams.get('orderId');
         
