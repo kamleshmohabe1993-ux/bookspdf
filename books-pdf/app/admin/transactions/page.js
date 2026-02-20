@@ -185,7 +185,7 @@ export default function TransactionsPage() {
         let filtered = transactions;
 
         if (filter !== 'all') {
-            filtered = filtered.filter(txn => txn.status === filter);
+            filtered = filtered.filter(txn => txn.paymentState === filter);
         }
 
         if (searchQuery) {
@@ -217,8 +217,8 @@ export default function TransactionsPage() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const getStatusIcon = (status) => {
-        switch(status) {
+    const getStatusIcon = (paymentState) => {
+        switch(paymentState) {
             case 'COMPLETED':
                 return <CheckCircle className="text-green-600" size={18} />;
             case 'FAILED':
@@ -232,8 +232,8 @@ export default function TransactionsPage() {
         }
     };
 
-    const getStatusColor = (status) => {
-        switch(status) {
+    const getStatusColor = (paymentState) => {
+        switch(paymentState) {
             case 'COMPLETED':
                 return 'bg-green-100 text-green-800';
             case 'FAILED':
@@ -261,13 +261,13 @@ export default function TransactionsPage() {
     // Statistics
     const stats = {
         total: transactions.length,
-        completed: transactions.filter(t => t.status === 'COMPLETED').length,
-        pending: transactions.filter(t => t.status === 'PENDING').length,
-        failed: transactions.filter(t => t.status === 'FAILED').length,
-        refunded: transactions.filter(t => t.status === 'REFUNDED').length,
+        completed: transactions.filter(t => t.paymentState === 'COMPLETED').length,
+        pending: transactions.filter(t => t.paymentState === 'PENDING').length,
+        failed: transactions.filter(t => t.paymentState === 'FAILED').length,
+        refunded: transactions.filter(t => t.paymentState === 'REFUNDED').length,
         totalRevenue: transactions
-            .filter(t => t.status === 'COMPLETED')
-            .reduce((sum, t) => sum + t.amount, 0)
+            .filter(t => t.paymentState === 'COMPLETED')
+            .reduce((sum, t) => sum + t.amount/100, 0)
     };
 
     return (
@@ -354,23 +354,23 @@ export default function TransactionsPage() {
 
                 {/* Filters */}
                 <div className="mb-4 sm:mb-6 flex flex-wrap gap-2 sm:gap-3">
-                    {['all', 'COMPLETED', 'PENDING', 'FAILED', 'REFUNDED'].map(status => (
+                    {['all', 'COMPLETED', 'PENDING', 'FAILED', 'REFUNDED'].map(paymentState => (
                         <button
-                            key={status}
-                            onClick={() => setFilter(status)}
+                            key={paymentState}
+                            onClick={() => setFilter(paymentState)}
                             className={`px-3 sm:px-4 py-2 rounded-lg font-semibold transition-all text-xs sm:text-sm ${
                                 filter === status
                                     ? 'bg-blue-600 text-white shadow-md'
                                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                             }`}
                         >
-                            {status === 'all' ? 'All' : status}
-                            {status !== 'all' && (
+                            {paymentState === 'all' ? 'All' : paymentState}
+                            {paymentState !== 'all' && (
                                 <span className="ml-1 sm:ml-2 bg-white/20 px-1.5 sm:px-2 py-0.5 rounded-full text-xs">
-                                    {status === 'COMPLETED' && stats.completed}
-                                    {status === 'PENDING' && stats.pending}
-                                    {status === 'FAILED' && stats.failed}
-                                    {status === 'REFUNDED' && stats.refunded}
+                                    {paymentState === 'COMPLETED' && stats.completed}
+                                    {paymentState === 'PENDING' && stats.pending}
+                                    {paymentState === 'FAILED' && stats.failed}
+                                    {paymentState === 'REFUNDED' && stats.refunded}
                                 </span>
                             )}
                         </button>
@@ -482,13 +482,13 @@ export default function TransactionsPage() {
                                             <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                                                 <div className="flex items-center gap-1">
                                                     <IndianRupee size={14} />
-                                                    {txn.amount}
+                                                    {txn.amount/100}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(txn.paymentStatus)}`}>
-                                                    {getStatusIcon(txn.status)}
-                                                    {txn.status}
+                                                    {getStatusIcon(txn.paymentState)}
+                                                    {txn.paymentState}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500">
@@ -784,7 +784,7 @@ export default function TransactionsPage() {
                                     <p className="text-sm text-gray-600 mb-1">Amount</p>
                                     <p className="text-xl font-bold text-gray-900 flex items-center gap-1">
                                         <IndianRupee size={18} />
-                                        {selectedTransaction.amount}
+                                        {selectedTransaction.amount/100}
                                     </p>
                                 </div>
                                 <div>

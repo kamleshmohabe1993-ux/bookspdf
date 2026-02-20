@@ -87,7 +87,21 @@ exports.login = async (req, res) => {
         }
 
         // Generate token
-        const token = generateToken(user._id);
+        // const token = generateToken(user._id);
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7h' } // Long expiry for payment flow
+        );
+
+        // ✅ SET HTTP-ONLY COOKIE (survives redirects)
+        res.cookie('auth_token', token, {
+            httpOnly: true,        // Cannot be accessed by JavaScript (XSS protection)
+            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+            sameSite: 'lax',       // CSRF protection (allows redirects)
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            path: '/'
+        });
 
         res.json({
             success: true,

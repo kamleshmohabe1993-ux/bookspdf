@@ -52,6 +52,7 @@ exports.initiatePayment = async (req, res) => {
 
         // const user = await user.findById(userId);
         const merchantOrderId = generateOrderId();
+        const downloadToken = crypto.randomBytes(32).toString('hex');
         const amountInPaise = Math.round(book.price * 100);
 
         // Create payment record
@@ -1063,7 +1064,6 @@ exports.getTransactionStats = async (req, res) => {
             paymentGateways: {
                 PhonePe: transactions.filter(t => t.status === 'PhonePe').length,
                 Free: transactions.filter(t => t.status === 'Free').length,
-                Razorpay: transactions.filter(t => t.status === 'Razorpay').length
             },
             recentTransactions: await Payment.find(dateFilter)
                 .sort({ purchasedAt: -1 })
@@ -1260,7 +1260,7 @@ exports.deleteTransaction = async (req, res) => {
         console.log('⚠️ TRANSACTION DELETE:', {
             deletedBy: req.user.email,
             transactionId: transaction.transactionId,
-            status: transaction.paymentStatus,
+            status: transaction.status,
             amount: transaction.amount,
             user: transaction.user?.email,
             book: transaction.book?.title,
@@ -1344,7 +1344,7 @@ exports.bulkDeleteTransactions = async (req, res) => {
         // Find all transactions
         const transactions = await Payment.find({ 
             _id: { $in: transactionIds } 
-        }).populate('book', 'title');
+        }).populate('bookId', 'title');
 
         if (transactions.length === 0) {
             return res.status(404).json({
@@ -1389,7 +1389,7 @@ exports.bulkDeleteTransactions = async (req, res) => {
         });
 
         // Delete all transactions
-        const result = await Purchase.deleteMany({ 
+        const result = await Payment.deleteMany({ 
             _id: { $in: transactionIds } 
         });
 
@@ -1432,7 +1432,7 @@ exports.cleanupFailedTransactions = async (req, res) => {
 
         // Find failed transactions older than cutoff date
         const failedTransactions = await Payment.find({
-            paymentStatus: 'FAILED',
+            status: 'FAILED',
             purchasedAt: { $lt: cutoffDate }
         });
 
@@ -1447,7 +1447,7 @@ exports.cleanupFailedTransactions = async (req, res) => {
         }
 
         // Delete them
-        const result = await Purchase.deleteMany({
+        const result = await Payment.deleteMany({
             status: 'FAILED',
             purchasedAt: { $lt: cutoffDate }
         });

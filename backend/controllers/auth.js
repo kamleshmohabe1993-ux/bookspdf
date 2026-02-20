@@ -10,6 +10,13 @@ exports.protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
         }
 
+        res.cookie('auth_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax', // Allows redirects
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
         if (!token) {
             return res.status(401).json({
                 success: false,
