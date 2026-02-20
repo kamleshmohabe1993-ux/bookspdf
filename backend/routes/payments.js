@@ -85,36 +85,3 @@ router.delete(
 );
 module.exports = router;
 
-// backend/routes/payments.js
-
-// const express = require('express');
-// const router = express.Router();
-// const { protect } = require('../middleware/auth'); // Your auth middleware
-// const {
-//     initiatePayment,
-//     paytmCallback,
-//     checkPaymentStatus,
-//     freeDownload
-// } = require('../controllers/paymentController');
-
-// // @route   POST /api/payments/initiate
-// // @desc    Initiate Paytm payment
-// // @access  Private
-// router.post('/initiate', protect, initiatePayment);
-
-// // @route   POST /api/payments/paytm/callback
-// // @desc    Handle Paytm callback
-// // @access  Public (Paytm will call this)
-// router.post('/paytm/callback', paytmCallback);
-
-// // @route   POST /api/payments/status
-// // @desc    Check payment status
-// // @access  Private
-// router.post('/status', protect, checkPaymentStatus);
-
-// // @route   POST /api/payments/free-download
-// // @desc    Download free book
-// // @access  Private
-// router.post('/free-download', protect, freeDownload);
-
-// module.exports = router;
