@@ -61,12 +61,31 @@ export default function BookDetailsPage() {
             const bookData = response.data.data;
             setBook(bookData);
             addFlowStep('Book Loaded', { title: bookData.title });
-
             // Check if user has purchased this book
             if (user) {
-                const purchased = user.purchasedBooks?.includes(params.id) || false;
-                setHasPurchased(purchased);
-            }
+  try {
+    const response = await paymentAPI.getMyPurchases();
+    const purchases = response.data.data;
+    let found = false;
+
+    purchases.forEach((purchase) => {
+        console.log("purchase",purchase);
+      if (
+        purchase.paymentState === "COMPLETED" &&
+        purchase.paymentGateway === "PhonePe"
+      ) {
+        found = true;
+      }
+    });
+    console.log("found",found);
+    if (found) {
+      setHasPurchased(true);
+    }
+
+  } catch (error) {
+    showToast.error('Error check user ownership: ' + error.message);
+  }
+}
         } catch (error) {
             showToast.error('Error loading book: ' + error.message);
             addFlowStep('Book Load Failed', { error: error.message }, false);
@@ -118,6 +137,9 @@ export default function BookDetailsPage() {
         }
     };
 
+    const handelUserPurchase = () => {
+
+    }
     // RATING FUNCTIONS
     const handleOpenRatingModal = () => {
     if (!user) {
@@ -598,61 +620,83 @@ export default function BookDetailsPage() {
 
                                 {/* MAIN ACTION BUTTON - Responsive */}
                                 <div className="space-y-3">
-                                    <button
-                                        onClick={handleDownloadClick}
-                                        disabled={processing}
-                                        className={`w-full py-4 sm:py-5 rounded-lg sm:rounded-xl font-bold text-lg sm:text-xl flex items-center justify-center gap-2 sm:gap-3 transition-all shadow-lg ${
-                                            processing
-                                                ? 'bg-gray-400 cursor-not-allowed'
-                                                : book.isPaid
-                                                ? 'bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:shadow-2xl transform hover:-translate-y-1'
-                                                : 'bg-linear-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white hover:shadow-2xl transform hover:-translate-y-1'
-                                        }`}
-                                    >
-                                        {processing ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-white"></div>
-                                                <span className="text-base sm:text-xl">Processing...</span>
-                                            </>
-                                        ) : book.isPaid ? (
-                                            <>
-                                                <ShoppingCart size={24} className="sm:w-7 sm:h-7" />
-                                                <span className="hidden sm:inline">Click to See Payment Details</span>
-                                                <span className="sm:hidden">Buy Now</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Download size={24} className="sm:w-7 sm:h-7" />
-                                                <span className="hidden sm:inline">Download Free PDF</span>
-                                                <span className="sm:hidden">Download</span>
-                                            </>
-                                        )}
-                                    </button>
-                                    {/* Visual Indicator - Responsive */}
-                                    {book.isPaid && !processing && (
-                                        <div className="bg-linear-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-3 sm:p-4 text-center">
-                                            <p className="text-xs sm:text-sm font-semibold text-purple-900 mb-2">
-                                                💳 Quick & Secure Checkout
-                                            </p>
-                                            <div className="hidden sm:flex items-center justify-center gap-4 text-xs text-purple-700">
-                                                <span className="flex items-center gap-1">
-                                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                                    Review Details
-                                                </span>
-                                                <span>→</span>
-                                                <span className="flex items-center gap-1">
-                                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                                    Choose Payment
-                                                </span>
-                                                <span>→</span>
-                                                <span className="flex items-center gap-1">
-                                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                                    Instant Download
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+    {hasPurchased && book.isPaid ? (
+        // ✅ Already Purchased State
+        <>
+            <div className="w-full py-4 sm:py-5 rounded-lg sm:rounded-xl font-bold text-lg sm:text-xl flex items-center justify-center gap-2 sm:gap-3 bg-green-100 border-2 border-green-400 text-green-800">
+                <span className="text-2xl">✓</span>
+                <span>Book Purchased</span>
+            </div>
+            <button
+                onClick={() => router.push('/my-library')}
+                className="w-full py-4 sm:py-5 rounded-lg sm:rounded-xl font-bold text-lg sm:text-xl flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-all shadow-lg hover:shadow-2xl transform hover:-translate-y-1"
+            >
+                <Download size={24} className="sm:w-7 sm:h-7" />
+                <span className="hidden sm:inline">Go to My Library</span>
+                <span className="sm:hidden">My Library</span>
+            </button>
+        </>
+    ) : (
+        // 🛒 Buy / Download State
+        <>
+            <button
+                onClick={handleDownloadClick}
+                disabled={processing}
+                className={`w-full py-4 sm:py-5 rounded-lg sm:rounded-xl font-bold text-lg sm:text-xl flex items-center justify-center gap-2 sm:gap-3 transition-all shadow-lg ${
+                    processing
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : book.isPaid
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:shadow-2xl transform hover:-translate-y-1'
+                        : 'bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white hover:shadow-2xl transform hover:-translate-y-1'
+                }`}
+            >
+                {processing ? (
+                    <>
+                        <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-white"></div>
+                        <span className="text-base sm:text-xl">Processing...</span>
+                    </>
+                ) : book.isPaid ? (
+                    <>
+                        <ShoppingCart size={24} className="sm:w-7 sm:h-7" />
+                        <span className="hidden sm:inline">Click to See Payment Details</span>
+                        <span className="sm:hidden">Buy Now</span>
+                    </>
+                ) : (
+                    <>
+                        <Download size={24} className="sm:w-7 sm:h-7" />
+                        <span className="hidden sm:inline">Download Free PDF</span>
+                        <span className="sm:hidden">Download</span>
+                    </>
+                )}
+            </button>
+
+            {/* Payment indicator — only for paid, unowned books */}
+            {book.isPaid && !processing && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-3 sm:p-4 text-center">
+                    <p className="text-xs sm:text-sm font-semibold text-purple-900 mb-2">
+                        💳 Quick & Secure Checkout
+                    </p>
+                    <div className="hidden sm:flex items-center justify-center gap-4 text-xs text-purple-700">
+                        <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            Review Details
+                        </span>
+                        <span>→</span>
+                        <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            Choose Payment
+                        </span>
+                        <span>→</span>
+                        <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            Instant Download
+                        </span>
+                    </div>
+                </div>
+            )}
+        </>
+    )}
+</div>
 
                                 {/* Security Info - Responsive */}
                                 {book.isPaid && (

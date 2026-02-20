@@ -44,7 +44,6 @@ export default function MyLibraryPage() {
         try {
             const response = await paymentAPI.getMyPurchases();
             setPurchases(response.data.data);
-            console.log("response.data.data",response.data.data);
         } catch (error) {
             console.error('Error loading purchases:', error);
             showToast.error('Failed to load your library');
@@ -291,6 +290,7 @@ export default function MyLibraryPage() {
                                     <div className="flex">
                                         <div className="w-1/3 bg-gray-100 p-4 flex items-center justify-center">
                                            <img
+                                           onClick={() => router.push(`/books/${purchase.bookId?._id}`)}
                                               src={getBookThumbnail(purchase.bookId)}
                                               alt={purchase.bookId?.title || 'Book cover'}
                                               onError={(e) => {
@@ -320,7 +320,7 @@ export default function MyLibraryPage() {
                                                 {purchase.bookId?.isPaid ?(
                                                     <div className="flex items-center gap-2 text-green-600">
                                                         <IndianRupee size={16} />
-                                                        <span>Paid: ₹{purchase.amount || 0}</span>
+                                                        <span>Paid: ₹{purchase.amount/100 || 0}</span>
                                                     </div>
                                                 ):(
                                                 <div className="flex items-center gap-2 text-green-600">
