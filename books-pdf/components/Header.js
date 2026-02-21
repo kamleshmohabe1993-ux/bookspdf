@@ -36,10 +36,15 @@ const Header = () => {
                         className="flex items-center gap-3 cursor-pointer group"
                         onClick={() => router.push('/')}
                     >
-                        <div className="relative">
+                        {/* <div className="relative">
                             <Book className="text-blue-600 group-hover:text-purple-600 transition-colors" size={36} />
                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
-                        </div>
+                        </div> */}
+                        <img
+                                    src="/favicon.ico"
+                                    alt="booksnpdf"
+                                    className="h-8 sm:h-10 shrink-0"
+                                />
                         <div>
                             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                                 BooknPDF
