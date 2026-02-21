@@ -94,6 +94,4 @@ const paymentSchema = new mongoose.Schema({
 
 paymentSchema.index({ userId: 1, status: 1 });
 paymentSchema.index({ createdAt: -1 });
-paymentSchema.index({ merchantOrderId: 1 });
-paymentSchema.index({ downloadToken: 1 });
 module.exports = mongoose.model('Payment', paymentSchema);

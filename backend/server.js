@@ -3,7 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 const { verifyPhonePeConfig } = require('./config/phonepe');
-
+const cookieParser = require('cookie-parser');
 // Load env vars
 dotenv.config();
 
@@ -16,7 +16,7 @@ if (!verifyPhonePeConfig()) {
 }
 
 const app = express();
-
+app.use(cookieParser());
 // Middleware
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
