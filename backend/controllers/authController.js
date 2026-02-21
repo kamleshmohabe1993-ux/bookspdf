@@ -229,9 +229,7 @@ exports.changePassword = async (req, res) => {
 exports.deleteProfile = async (req, res) => {
     try {
         const { password, userId } = req.body;
-        console.log("req.params",req.body);
         const profile = await User.findById(userId);
-        console.log("profile", profile);
         if (!profile) {
             return res.status(404).json({
                 success: false,
@@ -265,7 +263,6 @@ exports.deleteProfile = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        console.log("email",email);
         if (!email) {
             return res.status(400).json({
                 success: false,

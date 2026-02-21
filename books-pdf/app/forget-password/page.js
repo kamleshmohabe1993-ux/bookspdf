@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle, Lock, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import showToast from '@/lib/toast';
+import authAPI from '@/lib/api';
 export default function ForgotPasswordPage() {
     const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password, 4: Success
     const [formData, setFormData] = useState({
@@ -38,6 +39,8 @@ export default function ForgotPasswordPage() {
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
                 email: formData.email
                   });
+            // const response = await authAPI.forgotPassword(formData.email);
+            
             localStorage.setItem('token', response.data.token);
             showToast.success('OTP sent to your email!');
             setSuccess(response.data.message || 'OTP sent to your email!');
