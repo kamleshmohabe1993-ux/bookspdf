@@ -69,8 +69,9 @@ export default function BookDetailsPage() {
     let found = false;
 
     purchases.forEach((purchase) => {
-        console.log("purchase",purchase);
+       
       if (
+        purchase.bookId._id === params.id &&
         purchase.paymentState === "COMPLETED" &&
         purchase.paymentGateway === "PhonePe"
       ) {
@@ -282,7 +283,6 @@ export default function BookDetailsPage() {
                 setProcessing(false);
             } else if (paymentMethod === 'upi') {
                 // Create UPI deep link
-                console.log('📱 Creating UPI link for:', upiId);
                 const upiString = `upi://pay?pa=${upiId}&pn=BookMarket&am=${book.price}&cu=INR&tn=Payment for ${book.title}&tr=${response.data.data.transactionId}`;
                 
                 // Show confirmation
